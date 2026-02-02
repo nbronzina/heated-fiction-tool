@@ -1,25 +1,23 @@
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
-  const FAL_KEY = process.env.FAL_KEY;
-  if (!FAL_KEY) return res.status(500).json({ error: "FAL_KEY not set" });
+  const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+  if (!OPENAI_API_KEY) return res.status(500).json({ error: "OPENAI_API_KEY not set" });
 
   try {
-    const { prompt, image_url } = req.body;
+    const { prompt, image_base64, media_type } = req.body;
 
-    const response = await fetch("https://fal.run/fal-ai/flux/dev/image-to-image", {
+    const response = await fetch("https://api.openai.com/v1/images/edits", {
       method: "POST",
       headers: {
-        "Authorization": "Key " + FAL_KEY,
+        "Authorization": "Bearer " + OPENAI_API_KEY,
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
+        model: "gpt-image-1",
+        image: image_base64,
         prompt: prompt,
-        image_url: image_url,
-        strength: 0.75,
-        num_images: 1,
-        image_size: "landscape_16_9",
-        num_inference_steps: 28,
-        guidance_scale: 3.5
+        n: 1,
+        size: "1536x1024"
       })
     });
     const data = await response.json();
