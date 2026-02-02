@@ -17,7 +17,7 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         prompt: prompt,
         image_url: dataUri,
-        strength: 0.55,
+        strength: 0.65,
         num_images: 1,
         image_size: "landscape_16_9",
         num_inference_steps: 28,
