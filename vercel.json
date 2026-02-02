@@ -1,6 +1,11 @@
 {
-  "rewrites": [
-    { "source": "/api/analyze", "destination": "/api/analyze" }
-  ],
-  "outputDirectory": "public"
+  "buildCommand": "",
+  "installCommand": "",
+  "outputDirectory": "public",
+  "functions": {
+    "api/analyze.js": {
+      "memory": 1024,
+      "maxDuration": 30
+    }
+  }
 }
