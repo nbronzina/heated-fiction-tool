@@ -340,17 +340,12 @@
               })
             });
             const imgData = await imgRes.json();
-            console.log("OpenAI response:", JSON.stringify(imgData));
-            if (imgData.data && imgData.data[0]) {
-              if (imgData.data[0].b64_json) {
-                showGeneratedImage("data:image/png;base64," + imgData.data[0].b64_json);
-              } else if (imgData.data[0].url) {
-                showGeneratedImage(imgData.data[0].url);
-              } else {
-                throw new Error("No image in response");
-              }
+            console.log("FAL response:", JSON.stringify(imgData));
+            if (imgData.images && imgData.images[0] && imgData.images[0].url) {
+              showGeneratedImage(imgData.images[0].url);
             } else {
-              throw new Error(imgData.error?.message || imgData.error || "No image returned");
+              console.error("FAL error:", imgData.error || imgData.detail || "No image returned");
+              document.getElementById("gen-shimmer").style.display = "none";
             }
           } catch(e) {
             console.error("Image gen failed:", e);
