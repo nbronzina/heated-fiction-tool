@@ -5,10 +5,9 @@ export default async function handler(req, res) {
 
   try {
     const { prompt, image_base64, media_type } = req.body;
-
     const dataUri = "data:" + (media_type || "image/jpeg") + ";base64," + image_base64;
 
-    const response = await fetch("https://fal.run/fal-ai/flux/dev/image-to-image", {
+    const response = await fetch("https://fal.run/fal-ai/flux-pro/kontext", {
       method: "POST",
       headers: {
         "Authorization": "Key " + FAL_KEY,
@@ -17,18 +16,16 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         prompt: prompt,
         image_url: dataUri,
-        strength: 0.65,
         num_images: 1,
-        image_size: "landscape_16_9",
-        num_inference_steps: 28,
-        guidance_scale: 3.5
+        output_format: "jpeg",
+        guidance_scale: 4.0
       })
     });
     const data = await response.json();
-    console.log("FAL status:", response.status);
+    console.log("FAL Kontext status:", response.status);
     if (data.detail || data.error) {
       console.log("FAL error:", JSON.stringify(data));
-      return res.status(400).json({ error: data.detail || data.error });
+      return res.status(400).json({ error: JSON.stringify(data.detail || data.error) });
     }
     res.status(200).json(data);
   } catch (err) {
