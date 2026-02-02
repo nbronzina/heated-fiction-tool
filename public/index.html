@@ -113,7 +113,7 @@
       <span style="font-style:italic;color:#fdcfa4">We'll show you its future.</span>
     </h1>
     <div style="max-width:560px;margin-bottom:40px">
-      <p class="light" style="font-size:16px;line-height:1.8;margin-bottom:20px">Every render tells a story about the world it assumes — mild weather, stable infrastructure, predictable seasons. We write the next chapter.</p>
+      <p class="light" style="font-size:16px;line-height:1.8;margin-bottom:20px">Every render tells a story about the world it assumes — mild weather, stable infrastructure, predictable seasons. We imagine what comes next.</p>
       <p class="light" style="font-size:16px;line-height:1.8">Upload a building, a product, a space. Choose a climate scenario. Receive a <span class="sand">speculative image</span> of that same design under stress — and a design fiction dispatch from the future it will inhabit.</p>
     </div>
     <button class="btn btn-primary" onclick="goStep(1)" style="align-self:flex-start">Begin</button>
@@ -181,14 +181,6 @@
       <p id="fiction-label" class="mono dim" style="font-size:10px;letter-spacing:5px;text-transform:uppercase;margin-bottom:24px"></p>
       <div id="fiction-text" class="serif" style="font-size:20px;line-height:1.75;color:#e8e0d8;font-style:italic"></div>
 
-      <div id="prompt-box" style="display:none!important;margin-top:48px;padding:24px;background:rgba(253,207,164,0.03);border:1px solid rgba(253,207,164,0.06)">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-          <p class="mono dim" style="font-size:9px;letter-spacing:3px;text-transform:uppercase">Image generation prompt</p>
-          <button class="btn" onclick="copyPrompt()" style="padding:4px 12px;background:none;border:1px solid #4d4340;color:#7a706a;font-size:9px;letter-spacing:1px">Copy</button>
-        </div>
-        <p id="prompt-text" class="mono muted" style="font-size:12px;line-height:1.6"></p>
-      </div>
-
       <div style="margin-top:64px;padding-top:40px;border-top:1px solid rgba(253,207,164,0.08);display:flex;gap:16px">
         <button class="btn btn-ghost" onclick="resetAll()" style="flex:1">New fiction</button>
         <a href="https://calendly.com/indiantinker/quick-chat" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="flex:1;text-align:center;text-decoration:none;font-size:11px">Commission a project →</a>
@@ -220,22 +212,22 @@
       {
         id: "heat_extreme", label: "Extreme Heat", year: "2040", location: "Southern Europe", stat: "52°C",
         subtitle: "Sustained heatwave. Cracked asphalt, heat shimmer, abandoned streets.", color: "#E8572A",
-        prompt: `You are the creative director at Heated Studio, a design fiction studio in Madrid. Analyze this image of a designed object/space and produce TWO outputs for EXTREME HEAT (Southern Europe 2040, 52°C, 15-day heatwave, urban heat island):\n\nOUTPUT 1 — IMAGE PROMPT\nWrite a detailed image generation prompt that recreates THIS SPECIFIC scene under extreme heat. Describe the SAME architectural forms/materials/composition but showing: cracked pavement, heat shimmer, dried vegetation, improvised shade structures, water distribution point, melted/warped materials, zero pedestrians except one in UV suit, bleached colors, harsh shadows, haze. Be specific about what you see.\nFormat: "IMG:" then prompt on next line. Under 120 words. No negative prompts.\n\nOUTPUT 2 — DESIGN FICTION\nShort fiction (180 words max) as a FIELD NOTE from a researcher in 2040. One sensory detail. One reframing line. Prose only.\nFormat: "FICTION:" then text.`
+        prompt: `You are the creative director at Heated Studio, a design fiction studio in Madrid. Analyze this image of a designed object/space and produce TWO outputs for EXTREME HEAT (Southern Europe 2040, 52°C, 15-day heatwave, urban heat island):\n\nOUTPUT 1 — IMAGE PROMPT\nCreate a detailed image generation prompt that recreates THIS SPECIFIC scene under extreme heat. Describe the SAME architectural forms/materials/composition but showing: cracked pavement, heat shimmer, dried vegetation, improvised shade structures, water distribution point, melted/warped materials, zero pedestrians except one in UV suit, bleached colors, harsh shadows, haze. Be specific about what you see.\nFormat: "IMG:" then prompt on next line. Under 120 words. No negative prompts.\n\nOUTPUT 2 — DESIGN FICTION\nShort dispatch (180 words max) as a FIELD NOTE from a researcher in 2040. One sensory detail. One reframing line. Prose only.\nFormat: "FICTION:" then text.`
       },
       {
         id: "flood_dana", label: "Flash Flood", year: "2030", location: "Mediterranean Basin", stat: "300mm/3h",
         subtitle: "DANA event. Submerged ground floors, debris, waterline marks.", color: "#2A8FE8",
-        prompt: `You are the creative director at Heated Studio, a design fiction studio in Madrid. Analyze this image and produce TWO outputs for FLASH FLOOD (Mediterranean DANA, 300mm/3h, 1.5m flooding):\n\nOUTPUT 1 — IMAGE PROMPT\nRecreate THIS SPECIFIC scene during/after flash flood. Same forms but: brown floodwater at 1.2m, floating debris, waterline stains, damaged ground floor, emergency boats, overcast sky, rain, mud deposits. Be specific about the architecture.\nFormat: "IMG:" then prompt. Under 120 words. No negative prompts.\n\nOUTPUT 2 — DESIGN FICTION\nField note, 180 words max. One sensory detail. One reframing line. Prose only.\nFormat: "FICTION:" then text.`
+        prompt: `You are the creative director at Heated Studio, a design fiction studio in Madrid. Analyze this image and produce TWO outputs for FLASH FLOOD (Mediterranean DANA, 300mm/3h, 1.5m flooding):\n\nOUTPUT 1 — IMAGE PROMPT\nRecreate THIS SPECIFIC scene during/after flash flood. Same forms but: brown floodwater at 1.2m, floating debris, waterline stains, damaged ground floor, emergency boats, overcast sky, rain, mud deposits. Be specific about the architecture.\nFormat: "IMG:" then prompt. Under 120 words. No negative prompts.\n\nOUTPUT 2 — DESIGN FICTION\nShort dispatch, 180 words max. One sensory detail. One reframing line. Prose only.\nFormat: "FICTION:" then text.`
       },
       {
         id: "wind_storm", label: "Extreme Wind", year: "2035", location: "Atlantic Coast", stat: "140km/h",
         subtitle: "Cyclone aftermath. Torn facades, scattered debris, emergency crews.", color: "#8BA8BD",
-        prompt: `You are the creative director at Heated Studio, a design fiction studio in Madrid. Analyze this image and produce TWO outputs for EXTREME WIND (extra-tropical cyclone, 140km/h sustained, 180km/h gusts):\n\nOUTPUT 1 — IMAGE PROMPT\nRecreate THIS scene post-storm. Same forms but: torn cladding, shattered windows, scattered debris, bent signage, fallen trees, emergency tarps, dramatic sky, emergency workers. Be specific.\nFormat: "IMG:" then prompt. Under 120 words. No negative prompts.\n\nOUTPUT 2 — DESIGN FICTION\nField note, 180 words max. One sensory detail. One reframing line. Prose only.\nFormat: "FICTION:" then text.`
+        prompt: `You are the creative director at Heated Studio, a design fiction studio in Madrid. Analyze this image and produce TWO outputs for EXTREME WIND (extra-tropical cyclone, 140km/h sustained, 180km/h gusts):\n\nOUTPUT 1 — IMAGE PROMPT\nRecreate THIS scene post-storm. Same forms but: torn cladding, shattered windows, scattered debris, bent signage, fallen trees, emergency tarps, dramatic sky, emergency workers. Be specific.\nFormat: "IMG:" then prompt. Under 120 words. No negative prompts.\n\nOUTPUT 2 — DESIGN FICTION\nShort dispatch, 180 words max. One sensory detail. One reframing line. Prose only.\nFormat: "FICTION:" then text.`
       },
       {
         id: "compound", label: "Compound Crisis", year: "2050", location: "Global", stat: "Multi-hazard",
         subtitle: "Heat + scarcity + blackouts + overcrowding. The scenario nobody renders.", color: "#D4A843",
-        prompt: `You are the creative director at Heated Studio, a design fiction studio in Madrid. Analyze this image and produce TWO outputs for COMPOUND CRISIS (2050: 48°C + water rationing + blackouts + 200% occupancy from climate migration):\n\nOUTPUT 1 — IMAGE PROMPT\nRecreate THIS scene under compound crisis. Same forms but: improvised rooftop shade, laundry on balconies, water tanks, solar panels, ground floor market, water queues, generator cables, weathered materials, dense human activity. Show resilience not ruin.\nFormat: "IMG:" then prompt. Under 120 words. No negative prompts.\n\nOUTPUT 2 — DESIGN FICTION\nField note from 2050, 180 words max. Show adaptation and community. One sensory detail. One reframing line. Prose only.\nFormat: "FICTION:" then text.`
+        prompt: `You are the creative director at Heated Studio, a design fiction studio in Madrid. Analyze this image and produce TWO outputs for COMPOUND CRISIS (2050: 48°C + water rationing + blackouts + 200% occupancy from climate migration):\n\nOUTPUT 1 — IMAGE PROMPT\nRecreate THIS scene under compound crisis. Same forms but: improvised rooftop shade, laundry on balconies, water tanks, solar panels, ground floor market, water queues, generator cables, weathered materials, dense human activity. Show resilience not ruin.\nFormat: "IMG:" then prompt. Under 120 words. No negative prompts.\n\nOUTPUT 2 — DESIGN FICTION\nShort dispatch from 2050, 180 words max. Show adaptation and community. One sensory detail. One reframing line. Prose only.\nFormat: "FICTION:" then text.`
       }
     ];
 
@@ -321,7 +313,7 @@
       goStep(3);
       setLoading("Reading your design...");
       try {
-        setLoading("Writing the fiction...");
+        setLoading("Imagining the future...");
         const res = await fetch("/api/analyze", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -385,6 +377,7 @@
     function setLoading(msg) { document.getElementById("loading-stage").textContent = msg; }
 
     function renderResults(fictionText) {
+      fictionText = fictionText.replace(/\*\*/g, '').replace(/\*/g, '').replace(/^Field Note\s*#?\d+[:\.\s]*/i, '').trim();
       document.getElementById("result-original").src = uploadedDataUrl;
       const gl = document.getElementById("gen-label"); gl.textContent = selectedScenario.label + " — " + selectedScenario.year; gl.style.background = selectedScenario.color + "CC";
       const meta = [{l:"Scenario",v:selectedScenario.label},{l:"Region",v:selectedScenario.location},{l:"Projection",v:selectedScenario.year},{l:"Key metric",v:selectedScenario.stat}];
@@ -402,10 +395,6 @@
       const img = document.getElementById("result-generated"); img.src = blobUrl; img.style.display = "block";
     }
 
-
-    function copyPrompt() {
-      if (generatedPrompt) navigator.clipboard.writeText(generatedPrompt).then(() => { event.target.textContent = "Copied!"; setTimeout(() => { event.target.textContent = "Copy"; }, 1500); });
-    }
   </script>
 </body>
 </html>
