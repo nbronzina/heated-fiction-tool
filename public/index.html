@@ -181,7 +181,7 @@
       <p id="fiction-label" class="mono dim" style="font-size:10px;letter-spacing:5px;text-transform:uppercase;margin-bottom:24px"></p>
       <div id="fiction-text" class="serif" style="font-size:20px;line-height:1.75;color:#e8e0d8;font-style:italic"></div>
 
-      <div id="prompt-box" style="display:none;margin-top:48px;padding:24px;background:rgba(253,207,164,0.03);border:1px solid rgba(253,207,164,0.06)">
+      <div id="prompt-box" style="display:none!important;margin-top:48px;padding:24px;background:rgba(253,207,164,0.03);border:1px solid rgba(253,207,164,0.06)">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
           <p class="mono dim" style="font-size:9px;letter-spacing:3px;text-transform:uppercase">Image generation prompt</p>
           <button class="btn" onclick="copyPrompt()" style="padding:4px 12px;background:none;border:1px solid #4d4340;color:#7a706a;font-size:9px;letter-spacing:1px">Copy</button>
@@ -386,7 +386,6 @@
       bar.style.borderTop = "2px solid " + selectedScenario.color;
       document.getElementById("fiction-label").textContent = "Field note — " + selectedScenario.location + ", " + selectedScenario.year;
       document.getElementById("fiction-text").textContent = fictionText;
-      if (generatedPrompt) { document.getElementById("prompt-box").style.display = "block"; document.getElementById("prompt-text").textContent = generatedPrompt; }
       document.getElementById("gen-shimmer").style.display = "flex";
       document.getElementById("result-generated").style.display = "none";
     }
