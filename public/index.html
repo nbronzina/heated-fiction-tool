@@ -171,11 +171,6 @@
           <p class="mono muted" style="font-size:11px;animation:breathe 2s ease infinite">Generating speculative image...</p>
         </div>
         <img id="result-generated" alt="Speculative future" style="width:100%;height:480px;object-fit:cover;display:none" />
-        <div id="gen-fallback" style="display:none;position:absolute;inset:0;flex-direction:column;align-items:center;justify-content:center;padding:40px;background:#2a2320">
-          <p id="fallback-label" class="mono" style="font-size:10px;letter-spacing:3px;text-transform:uppercase;margin-bottom:16px">Image prompt — paste into Midjourney / FLUX</p>
-          <p id="fallback-prompt" class="light" style="font-size:13px;line-height:1.7;text-align:center;max-width:400px;margin-bottom:20px"></p>
-          <button class="btn" onclick="copyPrompt()" style="padding:10px 24px;background:none;border:1px solid rgba(255,255,255,0.1);font-size:10px;letter-spacing:2px">Copy prompt</button>
-        </div>
         <div id="gen-label" style="position:absolute;top:20px;left:20px;padding:6px 14px;backdrop-filter:blur(8px);font-family:'DM Mono',monospace;font-size:10px;letter-spacing:3px;color:#fff;text-transform:uppercase"></div>
       </div>
     </div>
@@ -351,14 +346,26 @@
         goStep(4);
         if (imgPrompt) {
           setLoading("Generating the image...");
-          const encoded = encodeURIComponent(imgPrompt + ", photorealistic, architectural photography, editorial quality, 35mm lens, overcast lighting");
-          const pollUrl = "https://image.pollinations.ai/prompt/" + encoded + "?width=1024&height=768&seed=" + Math.floor(Math.random()*100000) + "&nologo=true";
           try {
-            const imgRes = await fetch(pollUrl);
-            if (imgRes.ok) { const blob = await imgRes.blob(); showGeneratedImage(URL.createObjectURL(blob)); }
-            else { showImageFallback(); }
-          } catch(e) { console.error("Image gen failed:", e); showImageFallback(); }
-        } else { showImageFallback(); }
+            const imgRes = await fetch("/api/generate-image", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                prompt: imgPrompt + ", photorealistic, architectural photography, editorial quality, 35mm lens",
+                image_url: uploadedDataUrl
+              })
+            });
+            const imgData = await imgRes.json();
+            if (imgData.images && imgData.images[0] && imgData.images[0].url) {
+              showGeneratedImage(imgData.images[0].url);
+            } else {
+              throw new Error(imgData.error || "No image returned");
+            }
+          } catch(e) {
+            console.error("Image gen failed:", e);
+            document.getElementById("gen-shimmer").style.display = "none";
+          }
+        }
       } catch(err) {
         console.error(err);
         document.getElementById("error-msg").textContent = "Something went wrong: " + err.message;
@@ -381,7 +388,6 @@
       if (generatedPrompt) { document.getElementById("prompt-box").style.display = "block"; document.getElementById("prompt-text").textContent = generatedPrompt; }
       document.getElementById("gen-shimmer").style.display = "flex";
       document.getElementById("result-generated").style.display = "none";
-      document.getElementById("gen-fallback").style.display = "none";
     }
 
     function showGeneratedImage(blobUrl) {
@@ -389,12 +395,6 @@
       const img = document.getElementById("result-generated"); img.src = blobUrl; img.style.display = "block";
     }
 
-    function showImageFallback() {
-      document.getElementById("gen-shimmer").style.display = "none";
-      const fb = document.getElementById("gen-fallback"); fb.style.display = "flex";
-      document.getElementById("fallback-label").style.color = selectedScenario.color;
-      document.getElementById("fallback-prompt").textContent = generatedPrompt || "No prompt generated.";
-    }
 
     function copyPrompt() {
       if (generatedPrompt) navigator.clipboard.writeText(generatedPrompt).then(() => { event.target.textContent = "Copied!"; setTimeout(() => { event.target.textContent = "Copy"; }, 1500); });
