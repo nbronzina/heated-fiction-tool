@@ -6,7 +6,7 @@ export default async function handler(req, res) {
   try {
     const { prompt, image_url } = req.body;
 
-    const response = await fetch("https://queue.fal.run/fal-ai/flux/dev/image-to-image", {
+    const response = await fetch("https://fal.run/fal-ai/flux/dev/image-to-image", {
       method: "POST",
       headers: {
         "Authorization": "Key " + FAL_KEY,

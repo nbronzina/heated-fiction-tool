@@ -356,6 +356,7 @@
               })
             });
             const imgData = await imgRes.json();
+            console.log("FAL response:", JSON.stringify(imgData));
             if (imgData.images && imgData.images[0] && imgData.images[0].url) {
               showGeneratedImage(imgData.images[0].url);
             } else {
