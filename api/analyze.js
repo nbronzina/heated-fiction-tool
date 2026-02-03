@@ -339,18 +339,18 @@ ${promptGuidance}
 ${locationContext}
 
 ## OUTPUT FORMAT (follow exactly)
-IMG: [Conversational prompt describing the image transformation. 20-60 words. Describe the desired end state.]
+IMG: [Conversational prompt describing the image transformation. 20-60 words. Describe the desired end state. If people instructions are provided, include them as the LAST sentence of the IMG prompt.]
 
 FICTION: [2-3 sentences IN ENGLISH. Vary the emotional register—not every fiction is peak crisis. Show texture of adapted life. Be specific, hyper-local. Include one concrete detail. Always English regardless of location.]
 
 ## EXAMPLE OUTPUTS
 
 Heatwave:
-IMG: Edit this image to show an extreme heatwave. The sky is orange-amber with visible heat haze. All grass and plants are dead brown. The ground looks parched and dusty. Everything has a harsh, sun-bleached quality.
+IMG: Edit this image to show an extreme heatwave. The sky is orange-amber with visible heat haze. All grass and plants are dead brown. The ground looks parched and dusty. Everything has a harsh, sun-bleached quality. People wear wide-brimmed sun hats and seek shade.
 FICTION: The bus shelter's solar panels power a small fan now. It helps, a little. August in this part of town means finding shade has become second nature.
 
 Flood:
-IMG: Edit this image to show the aftermath of heavy rain. The sky is flat grey and overcast. All surfaces are wet and reflective with puddles. The colors are muted and desaturated. It feels like a cold, damp morning.
+IMG: Edit this image to show the aftermath of heavy rain. The sky is flat grey and overcast. All surfaces are wet and reflective with puddles. The colors are muted and desaturated. It feels like a cold, damp morning. People wear rubber boots and carry umbrellas.
 FICTION: Water marks on the pharmacy wall—third set this year, María notes on her way to work. The sandbags by the door stay out permanently now.
 
 Adaptation:
@@ -363,7 +363,9 @@ Remember: Vary the register. Some days are just... different now.` + (scenarioSu
     // Get scenario reminder and random people instruction for user message
     const reminder = scenarioReminders[scenario] || '';
     const peopleInstruction = getRandomPeopleInstruction(scenario);
-    const fullReminder = reminder + (peopleInstruction ? `\n\nPEOPLE IN IMAGE: If there are people visible, show them as: ${peopleInstruction}` : '');
+    const peopleInstructionForPrompt = peopleInstruction ?
+      `\n\n🧑 PEOPLE IN IMAGE (MANDATORY FOR IMG PROMPT): If there are people visible in the original image, your IMG prompt MUST include this instruction for how to show them: "${peopleInstruction}". Include this as the LAST sentence of your IMG prompt.` : '';
+    const fullReminder = reminder + peopleInstructionForPrompt;
 
     // Fix media types in image content blocks AND inject scenario reminder into text
     const messages = (req.body.messages || []).map(msg => ({
@@ -435,6 +437,9 @@ Remember: Vary the register. Some days are just... different now.` + (scenarioSu
       console.log('Location:', location ? `${location.city}, ${location.country}` : 'Not detected');
       console.log('Prompt Word Count:', wordCount);
       console.log('Validation:', validation.valid ? '✓ Valid' : `✗ Issues: ${validation.issues.join(', ')}`);
+      console.log('People instruction provided:', peopleInstruction || 'None');
+      console.log('People instruction in IMG prompt:', imgPrompt.toLowerCase().includes('people') || imgPrompt.toLowerCase().includes('figures') ? '✓ Yes' : '✗ No');
+      console.log('IMG prompt preview:', imgPrompt.substring(0, 200));
       console.log('=======================');
     }
 
