@@ -291,7 +291,7 @@
       r.onload = (ev) => {
         uploadedDataUrl = ev.target.result;
         imageBase64 = uploadedDataUrl.split(",")[1];
-        imageMediaType = file.type.startsWith("image/png") ? "image/png" : "image/jpeg";
+        imageMediaType = file.type || "image/jpeg";
         document.getElementById("upload-placeholder").style.display = "none";
         document.getElementById("upload-preview").style.display = "block";
         document.getElementById("preview-img").src = uploadedDataUrl;

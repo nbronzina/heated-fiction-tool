@@ -1,3 +1,12 @@
+// Detect media type from base64 header bytes
+function getMediaTypeFromBase64(base64String) {
+  if (base64String.startsWith('/9j/')) return 'image/jpeg';
+  if (base64String.startsWith('iVBORw')) return 'image/png';
+  if (base64String.startsWith('R0lGOD')) return 'image/gif';
+  if (base64String.startsWith('UklGR')) return 'image/webp';
+  return 'image/jpeg'; // fallback
+}
+
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
@@ -54,9 +63,28 @@ IMG: [Your 40-word max FLUX Kontext prompt, no line breaks]
 FICTION: [2-3 sentences. A design fiction dispatch from this future. Be specific to THIS design. Include a concrete detail: a date, a regulation, a product recall, a news headline, a maintenance log entry. Write in past tense or present tense, not future tense. No generic climate statements.]`;
 
   try {
+    // Fix media types in image content blocks
+    const messages = (req.body.messages || []).map(msg => ({
+      ...msg,
+      content: (msg.content || []).map(block => {
+        if (block.type === 'image' && block.source?.type === 'base64' && block.source?.data) {
+          const detectedType = getMediaTypeFromBase64(block.source.data);
+          return {
+            ...block,
+            source: {
+              ...block.source,
+              media_type: detectedType
+            }
+          };
+        }
+        return block;
+      })
+    }));
+
     // Inject system prompt into the request
     const requestBody = {
       ...req.body,
+      messages,
       system: systemPrompt
     };
 
