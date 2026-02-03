@@ -68,44 +68,173 @@ const SCENARIO_PERFORMANCE = {
   adaptation: '⭐⭐⭐⭐⭐ Excellent'
 };
 
-// People variations per scenario (for Gemini image generation variety)
-const peopleVariations = {
-  heatwave: [
-    "People wear wide-brimmed sun hats and carry refillable water bottles",
-    "Figures seek shade under awnings, wearing light linen clothing",
-    "People hold small portable fans, wearing UV-protective sleeves",
-    "Figures wear baseball caps and sunglasses, carrying iced drinks",
-    "People stand under umbrellas for shade, wearing loose cotton shirts"
-  ],
-  flood: [
-    "People wear rubber boots and carry umbrellas",
-    "Figures have rolled-up trousers, stepping carefully around puddles",
-    "People in rain ponchos carry shopping bags above water level",
-    "Figures wear waterproof jackets with hoods up",
-    "People in wellies help each other navigate wet areas"
-  ],
-  windstorm: [
-    "People brace against wind, holding onto hats",
-    "Figures lean forward into the wind, coats flapping",
-    "People shield their faces, hair blown sideways",
-    "Figures grip railings or posts for stability",
-    "People hurry with heads down, clutching bags tightly"
-  ],
-  adaptation: [
-    "People relax comfortably in outdoor seating areas",
-    "Figures enjoy coffee at shaded terraces, looking content",
-    "Children play freely while adults chat nearby",
-    "People cycle or walk leisurely, enjoying the space",
-    "Figures gather socially in green communal areas"
-  ]
+// People elements for combinatorial variety (1000+ combinations per scenario)
+const peopleElements = {
+  heatwave: {
+    headwear: [
+      'wide-brimmed sun hat',
+      'baseball cap',
+      'light scarf over head',
+      'UV-protective visor',
+      'straw hat',
+      'bucket hat'
+    ],
+    clothing: [
+      'loose linen shirt',
+      'light cotton dress',
+      'sleeveless top',
+      'UV-protective long sleeves',
+      'light-colored loose clothing',
+      'breathable athletic wear'
+    ],
+    accessories: [
+      'carrying water bottle',
+      'holding portable fan',
+      'with sunglasses',
+      'carrying iced drink',
+      'with cooling towel around neck',
+      'holding parasol for shade'
+    ],
+    posture: [
+      'seeking shade under awning',
+      'fanning themselves',
+      'wiping forehead',
+      'standing in shadow',
+      'moving slowly',
+      'pausing to rest'
+    ]
+  },
+
+  flood: {
+    footwear: [
+      'rubber boots',
+      'waterproof wellies',
+      'rain galoshes',
+      'wrapped plastic bags over shoes',
+      'barefoot carrying shoes',
+      'hiking boots'
+    ],
+    clothing: [
+      'rain poncho',
+      'waterproof jacket with hood up',
+      'rolled-up trousers',
+      'raincoat',
+      'plastic rain cover',
+      'hooded windbreaker'
+    ],
+    accessories: [
+      'carrying umbrella',
+      'holding bags above water',
+      'with waterproof backpack',
+      'carrying belongings overhead',
+      'with plastic shopping bags',
+      'holding phone in plastic bag'
+    ],
+    posture: [
+      'stepping carefully around puddles',
+      'wading through shallow water',
+      'helping someone across',
+      'looking down at footing',
+      'jumping over puddle',
+      'standing on raised surface'
+    ]
+  },
+
+  windstorm: {
+    headwear: [
+      'holding onto hat',
+      'hood blown back',
+      'hair blown wildly',
+      'scarf wrapped tight',
+      'cap pulled low',
+      'no hat, hair streaming'
+    ],
+    clothing: [
+      'coat flapping open',
+      'jacket zipped tight',
+      'clothes pressed against body by wind',
+      'scarf flying horizontally',
+      'loose clothing billowing',
+      'buttoned-up overcoat'
+    ],
+    accessories: [
+      'gripping bag tightly',
+      'papers flying from hand',
+      'holding umbrella struggling',
+      'clutching belongings',
+      'bag pressed to chest',
+      'nothing loose visible'
+    ],
+    posture: [
+      'leaning into wind',
+      'bracing against gust',
+      'shielding face with arm',
+      'turned sideways to wind',
+      'hurrying with head down',
+      'gripping railing for support'
+    ]
+  },
+
+  adaptation: {
+    activity: [
+      'relaxing in outdoor seating',
+      'reading at shaded table',
+      'having coffee on terrace',
+      'chatting with neighbors',
+      'working on laptop outside',
+      'enjoying a meal outdoors'
+    ],
+    children: [
+      'children playing freely',
+      'kids doing homework outside',
+      'children on bikes',
+      'kids running on grass',
+      'children at play structure',
+      'kids with water toys'
+    ],
+    social: [
+      'neighbors gathered talking',
+      'group sharing picnic',
+      'friends at outdoor table',
+      'family barbecuing',
+      'community gardening together',
+      'people exercising in group'
+    ],
+    comfort: [
+      'looking relaxed and comfortable',
+      'wearing light casual clothing',
+      'enjoying shade of green infrastructure',
+      'moving at leisure pace',
+      'sitting contentedly',
+      'smiling in conversation'
+    ]
+  }
 };
 
-// Select random people instruction for variety
-function getRandomPeopleInstruction(scenario) {
-  const variations = peopleVariations[scenario];
-  if (!variations) return '';
-  const randomIndex = Math.floor(Math.random() * variations.length);
-  return variations[randomIndex];
+// Build people instruction by combining 2-3 random elements
+function buildPeopleInstruction(scenario) {
+  const elements = peopleElements[scenario];
+  if (!elements) return '';
+
+  const categories = Object.keys(elements);
+
+  // Select 2-3 categories randomly
+  const numCategories = Math.random() > 0.5 ? 3 : 2;
+  const shuffled = categories.sort(() => 0.5 - Math.random());
+  const selected = shuffled.slice(0, numCategories);
+
+  // Take one random element from each category
+  const parts = selected.map(cat => {
+    const options = elements[cat];
+    return options[Math.floor(Math.random() * options.length)];
+  });
+
+  // Combine into natural sentence
+  if (scenario === 'adaptation') {
+    return `People appear ${parts.join(', ')}`;
+  } else {
+    return `People are ${parts.join(', ')}`;
+  }
 }
 
 // Intensity levels per scenario for image generation variety
@@ -141,8 +270,8 @@ function buildGeminiPrompt(scenario) {
   const randomLevel = levels[Math.floor(Math.random() * levels.length)];
   const intensity = intensityLevels[scenario][randomLevel];
 
-  // Get random people instruction
-  const peopleInstruction = getRandomPeopleInstruction(scenario);
+  // Build combinatorial people instruction (1000+ combinations)
+  const peopleInstruction = buildPeopleInstruction(scenario);
   const peopleText = peopleInstruction ? `Any people visible in the image: ${peopleInstruction}.` : '';
 
   let prompt = '';
