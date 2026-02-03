@@ -38,15 +38,15 @@ export default async function handler(req, res) {
 - Light: harsh yellow-orange, heat shimmer, haze
 - Atmosphere: abandoned during peak heat, water infrastructure visible
 
-### FLASH FLOOD 2030 (300mm rainfall, drainage failure)
-IMPORTANT: FLUX cannot submerge elements in water. Focus on AFTERMATH and WATER DAMAGE:
-- Sky: dark grey storm clouds, heavy overcast
-- Ground: brown mud puddles, wet muddy surfaces, standing dirty water patches
-- Add: mud stains and waterline marks on lower walls and planters
-- Vegetation: CHANGE all grass, flowers, and plants to dead brown muddy rotting mess. No green visible - everything should look drowned and decaying.
-- Add: scattered soggy debris, wet leaves stuck to surfaces
-- Surfaces: dark, soaked, mud-covered
-- Atmosphere: post-flood emergency, everything drenched and damaged
+### FLASH FLOOD 2030 (heavy rainfall, drainage failure)
+IMPORTANT: Aim for realistic post-rain aesthetic, NOT dramatic disaster movie. Think "grey November Tuesday after heavy rain" - muted, wet, reflective surfaces, overcast sky.
+- Sky: CHANGE to uniform grey overcast sky, no dramatic storm clouds
+- Surfaces: CHANGE all pavement, concrete, roads to wet, dark, reflective black with puddles
+- Atmosphere: Add slight mist or haze, reduce overall saturation, muted desaturated colors
+- Water: Add clear puddles with reflections, standing water on flat surfaces (NOT brown mud)
+- Vegetation: CHANGE grass and plants to wet, muddy, flattened. Bare wet branches. Dark green, not dead.
+- Materials: Add water stains, wet marks on walls, darkened wet surfaces everywhere
+- Overall mood: grey, damp, cold, desaturated - realistic and mundane, not apocalyptic
 - DO NOT request water covering or submerging elements
 
 ### EXTREME WIND 2035 (140km/h sustained winds)
