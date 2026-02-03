@@ -213,22 +213,22 @@
   <script>
     const SCENARIOS = [
       {
-        id: "heat_extreme", label: "Extreme Heat", year: "2040", location: "Southern Europe", stat: "52°C",
+        id: "heat_extreme", label: "Heatwave", location: "Southern Europe", stat: "52°C",
         subtitle: "Sustained heatwave. Cracked asphalt, heat shimmer, abandoned streets.", color: "#E8572A",
         prompt: `Apply the EXTREME HEAT 2040 scenario to this design.`
       },
       {
-        id: "flood_dana", label: "Flash Flood", year: "2030", location: "Mediterranean Basin", stat: "300mm/3h",
+        id: "flood_dana", label: "Flood", location: "Mediterranean Basin", stat: "300mm/3h",
         subtitle: "DANA event. Submerged ground floors, debris, waterline marks.", color: "#2A8FE8",
         prompt: `Apply the FLASH FLOOD 2030 scenario to this design.`
       },
       {
-        id: "wind_storm", label: "Extreme Wind", year: "2035", location: "Atlantic Coast", stat: "140km/h",
+        id: "wind_storm", label: "Windstorm", location: "Atlantic Coast", stat: "140km/h",
         subtitle: "Cyclone aftermath. Torn facades, scattered debris, emergency crews.", color: "#8BA8BD",
         prompt: `Apply the EXTREME WIND 2035 scenario to this design.`
       },
       {
-        id: "compound", label: "Compound Crisis", year: "2050", location: "Global", stat: "Multi-hazard",
+        id: "compound", label: "Adaptation", location: "Global", stat: "Multi-hazard",
         subtitle: "Heat + scarcity + blackouts + overcrowding. The scenario nobody renders.", color: "#D4A843",
         prompt: `Apply the COMPOUND CRISIS 2050 scenario to this design.`
       }
@@ -295,7 +295,7 @@
       const c = document.getElementById("scenario-cards");
       SCENARIOS.forEach(s => {
         const d = document.createElement("div"); d.className = "sc-card";
-        d.innerHTML = '<div style="position:absolute;top:0;left:0;width:3px;height:100%;background:'+s.color+';opacity:0.6"></div><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px"><div><p class="serif" style="font-size:22px;color:#fff;margin-bottom:4px">'+s.label+'</p><p class="mono dim" style="font-size:10px;letter-spacing:2px">'+s.location+' — '+s.year+'</p></div><span class="mono" style="font-size:20px;font-weight:300;color:'+s.color+'">'+s.stat+'</span></div><p class="muted" style="font-size:13px;line-height:1.6">'+s.subtitle+'</p>';
+        d.innerHTML = '<div style="position:absolute;top:0;left:0;width:3px;height:100%;background:'+s.color+';opacity:0.6"></div><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px"><div><p class="serif" style="font-size:22px;color:#fff;margin-bottom:4px">'+s.label+'</p><p class="mono dim" style="font-size:10px;letter-spacing:2px">'+s.location+'</p></div><span class="mono" style="font-size:20px;font-weight:300;color:'+s.color+'">'+s.stat+'</span></div><p class="muted" style="font-size:13px;line-height:1.6">'+s.subtitle+'</p>';
         d.onclick = () => { selectedScenario = s; renderUploadStep(); goStep(2); };
         c.appendChild(d);
       });
@@ -522,7 +522,7 @@
 
     function renderResults() {
       document.getElementById("result-original").src = uploadedDataUrl;
-      const gl = document.getElementById("gen-label"); gl.textContent = selectedScenario.label + " — " + selectedScenario.year; gl.style.background = selectedScenario.color + "CC";
+      const gl = document.getElementById("gen-label"); gl.textContent = selectedScenario.label; gl.style.background = selectedScenario.color + "CC";
       document.getElementById("gen-shimmer").style.display = "flex";
       document.getElementById("result-generated").style.display = "none";
     }
