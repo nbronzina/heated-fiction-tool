@@ -7,84 +7,204 @@ function getMediaTypeFromBase64(base64String) {
   return 'image/jpeg'; // fallback
 }
 
+// Validate that generated prompt follows FLUX Kontext requirements
+function validateImagePrompt(prompt) {
+  const issues = [];
+
+  const wordCount = prompt.split(/\s+/).length;
+  if (wordCount > 45) {
+    issues.push(`Prompt too long: ${wordCount} words (max 40)`);
+  }
+
+  const hasInstructionalVerb = /\b(CHANGE|ADD|REPLACE|REMOVE|MAKE)\b/i.test(prompt);
+  if (!hasInstructionalVerb) {
+    issues.push('Missing instructional verb (CHANGE/ADD/REPLACE)');
+  }
+
+  const forbiddenPatterns = [
+    /bending trees/i,
+    /motion blur/i,
+    /submerged in water/i,
+    /underwater/i,
+    /trees blowing/i,
+    /active flood/i
+  ];
+
+  forbiddenPatterns.forEach(pattern => {
+    if (pattern.test(prompt)) {
+      issues.push(`Contains impossible request: ${pattern}`);
+    }
+  });
+
+  if (!/keep.*same|maintain.*composition|preserve/i.test(prompt)) {
+    issues.push('Missing preservation clause');
+  }
+
+  return { valid: issues.length === 0, issues };
+}
+
+// Build location context for hyper-local predictions
+function buildLocationContext(location) {
+  if (!location || !location.city) return '';
+
+  return `
+## LOCATION CONTEXT: ${location.city}${location.country ? `, ${location.country}` : ''}
+
+Make the fiction hyper-local to this place:
+- Reference the specific city/region by name in the FICTION
+- Include plausible local climate predictions:
+  * Coastal cities: mention sea level rise, storm surge, salt air corrosion
+  * Mediterranean cities (Madrid, Barcelona, Rome): mention drought, heat waves, water restrictions
+  * River cities: mention flood risk, drainage infrastructure
+  * Northern cities: mention changing seasons, new weather patterns
+- Mention local landmarks, street names, or cultural elements if recognizable
+- The dispatch should feel like it was written BY someone from this place
+`;
+}
+
+// Scenario-specific instructions aligned with IPCC SSPs
+const scenarioInstructions = {
+  heatwave: `
+## HEATWAVE — SSP3-7.0 Climate Scenario
+Extreme heat event in a +2.7°C world. Focus on drought, heat stress, and human adaptation.
+
+VISUAL EFFECTS:
+- Sky: CHANGE to harsh, washed-out, pale orange/yellow haze
+- Surfaces: ADD heat shimmer, dust, cracked dry earth
+- Materials: ADD thermal stress cracks on concrete, faded/chalked paint, warped wood
+- Vegetation: CHANGE ALL plants, grass, trees to dead brown/straw color. No green visible.
+- Water features: Show empty, cracked, dried out
+- People: ADD sun hats, UV shields, water bottles, light clothing, seeking shade
+
+ATMOSPHERE: High contrast, harsh shadows, heat haze distortion, desaturated greens
+
+FICTION TONE: A hot Tuesday in August. Mention temperature, shade-seeking behavior, water rationing, siesta culture adaptation.
+`,
+
+  flood: `
+## FLOOD — SSP3-7.0 Climate Scenario
+Post-heavy-rain aftermath. NOT active flooding—show the morning after.
+
+VISUAL EFFECTS:
+- Sky: CHANGE to uniform grey overcast (NOT dramatic storm clouds)
+- Ground: ADD puddles, standing water, wet reflective surfaces
+- Materials: ADD waterline marks on walls, wet stains, darkened surfaces, early efflorescence
+- Vegetation: CHANGE ALL plants to flattened, waterlogged, muddy. Dark wet green, matted down.
+- Debris: ADD scattered soggy debris, wet leaves stuck to surfaces, sediment deposits
+- People: ADD rain boots, umbrellas, rolled-up pants, cleaning up
+
+ATMOSPHERE: Grey, muted, low saturation, wet surfaces reflecting overcast sky
+
+FICTION TONE: A grey morning after heavy overnight rain. Mention drainage issues, cleanup efforts, community response. Mundane, not apocalyptic.
+`,
+
+  windstorm: `
+## WINDSTORM — SSP3-7.0 Climate Scenario
+Storm aftermath. Focus on wind damage, NOT active wind (model cannot show motion).
+
+VISUAL EFFECTS:
+- Sky: CHANGE to dark grey dramatic storm clouds, directional light
+- Debris: ADD fallen branches, scattered leaves, overturned furniture, torn fabric
+- Materials: ADD loose elements, damaged awnings, displaced objects
+- Vegetation: CHANGE plants to stripped, broken, shredded, defoliated. Bare branches, scattered petals.
+- Surfaces: ADD wet from rain, dirt/leaves stuck to walls
+- People: ADD bracing posture, holding belongings, disheveled hair/clothing
+
+ATMOSPHERE: Dark, dramatic, high contrast, directional light suggesting wind direction
+
+FICTION TONE: The morning after a severe storm. Mention wind speeds, damage assessment, cleanup beginning.
+`,
+
+  adaptation: `
+## ADAPTATION — SSP1-2.6 Climate Scenario
+Optimistic future with successful climate adaptation. Net-zero by 2050.
+
+VISUAL EFFECTS:
+- Sky: Keep pleasant or ADD soft clouds, comfortable daylight
+- Infrastructure: ADD visible green infrastructure (green roofs, solar panels, rain gardens)
+- Materials: Show weathered but well-maintained, sustainable materials visible
+- Vegetation: CHANGE to climate-adapted species, productive urban greening, bioswales
+- Surfaces: ADD permeable paving, water retention features
+- People: Show comfortable outdoor activity, enjoying adapted spaces
+
+ATMOSPHERE: Pleasant, inviting, green-tinted, comfortable
+
+FICTION TONE: Hopeful but realistic. Mention specific adaptations, community initiatives, improved quality of life despite challenges.
+`
+};
+
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
   const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
   if (!ANTHROPIC_API_KEY) return res.status(500).json({ error: "API key not set" });
 
-  const systemPrompt = `You are a climate foresight analyst examining a design render or visualization.
+  // Extract scenario and location from request
+  const scenario = req.body.scenario || 'heatwave';
+  const location = req.body.location || null;
+  const locationContext = buildLocationContext(location);
+  const scenarioGuide = scenarioInstructions[scenario] || scenarioInstructions.heatwave;
 
-## Your task:
-1. Identify what TYPE of design this is (building, product, interior, site, furniture, vehicle, etc.)
-2. Identify the IMPLICIT ASSUMPTIONS it makes (stable climate, functioning infrastructure, predictable conditions)
-3. Generate a FLUX Kontext image editing prompt that shows THIS SAME DESIGN under climate stress
-4. Write a design fiction dispatch from that future
+  const systemPrompt = `You are a climate design fiction specialist for Heated Studio. You transform architectural renders and design images into plausible climate futures.
 
-## FLUX Kontext syntax rules (CRITICAL):
-- INSTRUCTIONAL ONLY: Start with "Add", "Change", "Make"
-- NEVER use: "Imagine", "Create", "Transform this into", "A scene where"
-- Describe ONLY what CHANGES, never describe what already exists in the image
-- MUST end with: "Keep the exact same design, composition, camera angle, and framing."
-- Maximum 40 words total
-- No line breaks in the prompt
+## CORE PHILOSOPHY
+- MUNDANE, NOT APOCALYPTIC: Show "a grey Tuesday in November", not catastrophe
+- ECO-ANXIETY BALANCE: Both anxiety and hope correlate with climate action. Never create paralyzing despair
+- HYPER-LOCAL: People relate to their zip code. Make it feel specific, not generic
+- SCIENTIFIC GROUNDING: Scenarios align with IPCC AR6 Shared Socioeconomic Pathways (SSPs)
+- HUMAN AGENCY: Always show signs of human adaptation and response
 
-## Climate scenario effects:
+## IPCC SCENARIO ALIGNMENT
+- HEATWAVE: SSP3-7.0 (intermediate-high emissions, +2.7°C by 2100)
+- FLOOD: SSP3-7.0 (increased precipitation extremes)
+- WINDSTORM: SSP3-7.0 (more intense storm events)
+- ADAPTATION: SSP1-2.6 (optimistic net-zero by 2050, successful adaptation)
 
-### EXTREME HEAT 2040 (45°C heatwaves, water scarcity, UV damage)
-- Materials: bleached, faded, cracked, warped
-- Vegetation: CHANGE all grass, plants, and trees to dead, brown, dried, withered. No green vegetation should remain.
-- Surfaces: dusty, heat-damaged
-- Light: harsh yellow-orange, heat shimmer, haze
-- Atmosphere: abandoned during peak heat, water infrastructure visible
+## MATERIAL DEGRADATION GUIDE
+When showing climate effects on buildings, include realistic material degradation:
 
-### FLASH FLOOD 2030 (heavy rainfall, drainage failure)
-IMPORTANT: Aim for realistic post-rain aesthetic, NOT dramatic disaster movie. Think "grey November Tuesday after heavy rain" - muted, wet, reflective surfaces, overcast sky.
-- Sky: CHANGE to uniform grey overcast sky, no dramatic storm clouds
-- Surfaces: CHANGE all pavement, concrete, roads to wet, dark, reflective black with puddles
-- Atmosphere: Add slight mist or haze, reduce overall saturation, muted desaturated colors
-- Water: Add clear puddles with reflections, standing water on flat surfaces (NOT brown mud)
-- Vegetation: CHANGE grass and plants to wet, muddy, flattened. Bare wet branches. Dark green, not dead.
-- Materials: Add water stains, wet marks on walls, darkened wet surfaces everywhere
-- Overall mood: grey, damp, cold, desaturated - realistic and mundane, not apocalyptic
-- DO NOT request water covering or submerging elements
+CONCRETE: Cracking from thermal expansion, efflorescence (white salt stains), spalling from heat cycles, waterline marks
+BRICK/MASONRY: Efflorescence between joints, mortar erosion, thermal stress cracks at corners
+METAL: Rust/corrosion at joints and fasteners, patina on copper/bronze, paint peeling
+WOOD: Warping and checking (surface cracks), grey weathering, rot near ground contact
+GLASS: Dust/grime accumulation, water staining, seal failure (fogging)
+PAINT/RENDER: Fading and chalking from UV, peeling from moisture, algae/mold in damp areas
 
-### EXTREME WIND 2035 (140km/h sustained winds)
-IMPORTANT: FLUX cannot bend trees or show motion. Focus on AFTERMATH and DAMAGE:
-- Sky: dramatic dark storm clouds, greenish-yellow tint
-- Add: fallen branches and debris scattered on ground
-- Add: torn and damaged canopy fabric, loose materials flapping
-- Add: overturned furniture, displaced objects, scattered planters
-- Add: leaves and papers scattered everywhere
-- Vegetation: CHANGE plants and flowers to stripped, broken, flattened, shredded. Bare branches, scattered petals.
-- Surfaces: wet from rain, puddles forming
-- Atmosphere: dark, dramatic, emergency lighting
-- DO NOT request bending trees or motion blur
+## VEGETATION GUIDE
+HEATWAVE: Dead brown straw-colored grass, wilted leaves with brown edges, withered dried flowers, cracked dry earth
+FLOOD: Flattened waterlogged plants, matted grass with debris, mud-splattered, sediment deposits
+WINDSTORM: Stripped broken vegetation, bare branches, defoliated shrubs, scattered leaves on ground
+ADAPTATION: Climate-adapted species, green infrastructure, productive urban vegetation, healthy drought-tolerant plants
 
-### COMPOUND CRISIS 2050 (25 years of adaptation, still functioning)
-- Additions: solar panels, water tanks, collection systems
-- Surfaces: 25 years of weathering, patina, informal repairs
-- Vegetation: growing on/around structure, urban farming
-- Light: warm dusty golden hour
-- Atmosphere: resilient occupation, adapted use
+## HUMAN PRESENCE
+HEATWAVE: Sun hats, UV protective clothing, water bottles, seeking shade, light colors
+FLOOD: Rain boots, umbrellas, rolled-up pants, carrying belongings, cleaning up
+WINDSTORM: Bracing against wind, holding hats, disheveled clothing, seeking shelter
+ADAPTATION: Normal comfortable activities, enjoying adapted spaces
 
-## People modifications (if people are visible in the design):
-- HEAT: Add sun hats, UV face shields, water bottles, light loose clothing, seeking shade
-- FLOOD: Add rain boots, umbrellas, rolled-up pants, wading carefully, carrying belongings
-- WIND: Add people bracing, holding onto hats, hair and clothing disheveled
-- COMPOUND: Add face masks, adapted utilitarian clothing, carrying supplies
+## ATMOSPHERE & LIGHTING
+HEATWAVE: Harsh sun, orange/yellow cast, heat haze, high contrast, washed out sky
+FLOOD: Overcast grey (NOT dramatic storm), wet reflective surfaces, diffused light, low saturation, muted
+WINDSTORM: Dark dramatic sky, directional light, high contrast
+ADAPTATION: Pleasant daylight, comfortable, inviting, green tones
 
-## Location-based predictions (if LOCATION CONTEXT is provided):
-When location data is available, the FICTION should:
-- Reference the specific city/region by name
-- Include plausible local climate predictions (sea level rise for coastal cities, drought for Mediterranean, flooding for river cities, heat islands for dense urban areas)
-- Mention local landmarks, infrastructure, or cultural elements when relevant
-- Make the scenario feel grounded in that specific place, not generic
+## FLUX KONTEXT SYNTAX RULES (Critical)
+- Use INSTRUCTIONAL verbs: "CHANGE the sky to..." / "ADD puddles" / "REPLACE grass with..."
+- NEVER use: "The image shows..." / "A scene with..." / "Depicting..."
+- Max 40 words for image prompt
+- Cannot deform geometry (no bending trees, no motion blur)
+- Cannot submerge objects in water (show waterline marks instead)
+- MUST end with: "Keep the exact same composition, camera angle, and framing."
 
-## Output format (follow exactly):
-IMG: [Your 40-word max FLUX Kontext prompt, no line breaks]
+${scenarioGuide}
+${locationContext}
 
-FICTION: [2-3 sentences. A design fiction dispatch from this future. Be specific to THIS design. Include a concrete detail: a date, a regulation, a product recall, a news headline, a maintenance log entry. Write in past tense or present tense, not future tense. No generic climate statements.]`;
+## OUTPUT FORMAT (follow exactly)
+IMG: [Your 40-word max FLUX Kontext prompt using CHANGE/ADD/REPLACE verbs, no line breaks]
+
+FICTION: [2-3 sentences. A mundane dispatch from this future—like local news or personal observation. Be specific to THIS design. Include a concrete detail: a date, temperature, regulation, or local reference. Written in present or past tense. Hyper-local if location is known.]
+
+Remember: You are creating design fiction artifacts, not disaster porn. The goal is to help people imagine and prepare for climate futures, not to paralyze them with fear.`;
 
   try {
     // Fix media types in image content blocks
@@ -105,7 +225,6 @@ FICTION: [2-3 sentences. A design fiction dispatch from this future. Be specific
       })
     }));
 
-    // Inject system prompt into the request
     const requestBody = {
       ...req.body,
       messages,
@@ -122,8 +241,28 @@ FICTION: [2-3 sentences. A design fiction dispatch from this future. Be specific
       body: JSON.stringify(requestBody),
     });
     const data = await response.json();
+
+    // Debug logging
+    if (data.content && data.content[0]?.text) {
+      const text = data.content[0].text;
+      const imgMatch = text.match(/IMG:\s*(.+?)(?=FICTION:|$)/is);
+      const imgPrompt = imgMatch ? imgMatch[1].trim() : '';
+      const wordCount = imgPrompt.split(/\s+/).length;
+      const validation = validateImagePrompt(imgPrompt);
+
+      console.log('=== HEATED ANALYSIS ===');
+      console.log('Scenario:', scenario);
+      console.log('Location:', location ? `${location.city}, ${location.country}` : 'Not detected');
+      console.log('Prompt Word Count:', wordCount);
+      if (!validation.valid) {
+        console.log('Validation Issues:', validation.issues);
+      }
+      console.log('=======================');
+    }
+
     res.status(200).json(data);
   } catch (err) {
+    console.error('Analyze API error:', err);
     res.status(500).json({ error: "API request failed" });
   }
 }

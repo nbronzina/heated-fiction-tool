@@ -427,6 +427,8 @@
           body: JSON.stringify({
             model: "claude-sonnet-4-5-20250929",
             max_tokens: 1000,
+            scenario: selectedScenario.label.toLowerCase(),
+            location: locationData,
             messages: [{ role: "user", content: [
               { type: "image", source: { type: "base64", media_type: imageMediaType, data: imageBase64 } },
               { type: "text", text: userPrompt }
