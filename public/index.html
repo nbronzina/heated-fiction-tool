@@ -291,6 +291,7 @@
     </div>
 
     <div style="max-width:1100px;margin:0 auto;padding:32px 48px;display:flex;gap:16px">
+      <button class="btn btn-ghost" onclick="retryGeneration()" style="flex:1">Retry</button>
       <button class="btn btn-ghost" onclick="resetAll()" style="flex:1">New fiction</button>
       <button class="btn btn-ghost" onclick="downloadImage()" style="flex:1">Download image</button>
       <a href="https://calendly.com/indiantinker/quick-chat" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="flex:1;text-align:center;text-decoration:none;font-size:11px">Commission a project →</a>
@@ -622,28 +623,81 @@
     }
 
     async function retryGeneration() {
+      // Full regeneration with different intensity/people/register combinations
+      if (!imageBase64 || !selectedScenario) {
+        console.error('No image or scenario to retry');
+        return;
+      }
+
+      // Reset UI to show loading state
       const errorDiv = document.getElementById("gen-error");
       if (errorDiv) errorDiv.remove();
+      document.getElementById("result-generated").style.display = "none";
       document.getElementById("gen-shimmer").style.display = "flex";
-      if (!generatedPrompt) return;
+      document.getElementById("watermark").style.display = "none";
+      document.getElementById("fiction-container").style.display = "none";
+
       try {
-        const imgRes = await fetch("/api/generate-image-gemini", {
+        // Build prompt with location context if available
+        let userPrompt = selectedScenario.prompt;
+        if (locationData && locationData.city) {
+          userPrompt += `\n\nLOCATION CONTEXT: This design is located in ${locationData.city}, ${locationData.country}${locationData.state ? ", " + locationData.state : ""}. Make the fiction specific to this place.`;
+        }
+
+        // Get new analysis (new random intensity/people/register)
+        const res = await fetch("/api/analyze", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            prompt: generatedPrompt,
-            imageBase64: imageBase64,
-            mimeType: imageMediaType
+            model: "claude-sonnet-4-5-20250929",
+            max_tokens: 1000,
+            scenario: selectedScenario.label.toLowerCase(),
+            location: locationData,
+            messages: [{ role: "user", content: [
+              { type: "image", source: { type: "base64", media_type: imageMediaType, data: imageBase64 } },
+              { type: "text", text: userPrompt }
+            ]}]
           })
         });
-        const imgData = await imgRes.json();
-        if (imgData.success && imgData.imageBase64) {
-          const dataUrl = `data:${imgData.mimeType || 'image/png'};base64,${imgData.imageBase64}`;
-          showGeneratedImage(dataUrl);
-        } else {
-          showGenError();
+
+        const data = await res.json();
+        if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
+
+        const text = (data.content || []).map(i => i.text || "").join("\n");
+        const imgMatch = text.match(/IMG:\s*\n?([\s\S]*?)(?=FICTION:|$)/i);
+        let imgPrompt = imgMatch ? imgMatch[1].trim() : "";
+        imgPrompt = imgPrompt.replace(/\*+/g, '').trim();
+        console.log("RETRY - IMG PROMPT:", imgPrompt);
+        generatedPrompt = imgPrompt;
+
+        // Parse FICTION text
+        const fictionMatch = text.match(/FICTION:\s*\n?([\s\S]*?)$/i);
+        generatedFiction = fictionMatch ? fictionMatch[1].trim().replace(/\*+/g, '') : "";
+        console.log("RETRY - FICTION:", generatedFiction);
+
+        // Generate image with new prompt
+        if (imgPrompt) {
+          const imgRes = await fetch("/api/generate-image-gemini", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              prompt: imgPrompt,
+              imageBase64: imageBase64,
+              mimeType: imageMediaType
+            })
+          });
+          const imgData = await imgRes.json();
+          console.log("Retry Gemini response:", imgData.success ? "success" : imgData.error);
+          if (imgData.success && imgData.imageBase64) {
+            const dataUrl = `data:${imgData.mimeType || 'image/png'};base64,${imgData.imageBase64}`;
+            showGeneratedImage(dataUrl);
+          } else {
+            console.error("Retry Gemini error:", imgData.error || "No image returned");
+            showGenError();
+          }
         }
       } catch(e) {
+        console.error("Retry failed:", e);
         showGenError();
       }
     }
