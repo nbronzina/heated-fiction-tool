@@ -547,24 +547,55 @@
         const response = await fetch(img.src);
         const blob = await response.blob();
 
-        // Create local blob URL
-        const blobUrl = URL.createObjectURL(blob);
+        // Create image element to get dimensions
+        const tempImg = new Image();
+        tempImg.crossOrigin = "anonymous";
 
-        // Download
-        const link = document.createElement("a");
-        link.href = blobUrl;
-        link.download = "heated-fiction-" + Date.now() + ".jpg";
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        await new Promise((resolve, reject) => {
+          tempImg.onload = resolve;
+          tempImg.onerror = reject;
+          tempImg.src = URL.createObjectURL(blob);
+        });
 
-        // Clean up blob URL
-        URL.revokeObjectURL(blobUrl);
+        // Create canvas and draw image
+        const canvas = document.createElement("canvas");
+        canvas.width = tempImg.naturalWidth;
+        canvas.height = tempImg.naturalHeight;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(tempImg, 0, 0);
+
+        // Add watermark
+        const fontSize = Math.max(14, Math.round(canvas.width * 0.018));
+        ctx.font = `${fontSize}px "DM Mono", monospace`;
+        ctx.fillStyle = "rgba(253, 207, 164, 0.7)";
+        ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
+        ctx.shadowBlur = 4;
+        ctx.shadowOffsetX = 1;
+        ctx.shadowOffsetY = 1;
+
+        const text = "HEATED.WORLD";
+        const padding = Math.round(fontSize * 0.8);
+        ctx.fillText(text, padding, canvas.height - padding);
+
+        // Export as JPEG
+        canvas.toBlob((watermarkedBlob) => {
+          const blobUrl = URL.createObjectURL(watermarkedBlob);
+          const link = document.createElement("a");
+          link.href = blobUrl;
+          link.download = "heated-fiction-" + Date.now() + ".jpg";
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(blobUrl);
+          URL.revokeObjectURL(tempImg.src);
+
+          btn.textContent = originalText;
+          btn.disabled = false;
+        }, "image/jpeg", 0.95);
       } catch (err) {
         console.error("Download failed:", err);
         // Fallback: open in new tab
         window.open(img.src, "_blank");
-      } finally {
         btn.textContent = originalText;
         btn.disabled = false;
       }
