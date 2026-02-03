@@ -43,7 +43,7 @@ IMPORTANT: FLUX cannot submerge elements in water. Focus on AFTERMATH and WATER 
 - Sky: dark grey storm clouds, heavy overcast
 - Ground: brown mud puddles, wet muddy surfaces, standing dirty water patches
 - Add: mud stains and waterline marks on lower walls and planters
-- Vegetation: CHANGE all grass, flowers, and plants to wilted, flattened, brown, waterlogged, rotting. No green vegetation should remain.
+- Vegetation: CHANGE all grass, flowers, and plants to dead brown muddy rotting mess. No green visible - everything should look drowned and decaying.
 - Add: scattered soggy debris, wet leaves stuck to surfaces
 - Surfaces: dark, soaked, mud-covered
 - Atmosphere: post-flood emergency, everything drenched and damaged

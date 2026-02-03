@@ -53,7 +53,7 @@ export default async function handler(req, res) {
         image_url: dataUri,
         num_images: 1,
         output_format: "jpeg",
-        guidance_scale: 3.0,
+        guidance_scale: 4.5,
         image_size: {
           width: finalWidth,
           height: finalHeight
