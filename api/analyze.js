@@ -68,6 +68,46 @@ const SCENARIO_PERFORMANCE = {
   adaptation: '⭐⭐⭐⭐⭐ Excellent'
 };
 
+// People variations per scenario (for Gemini image generation variety)
+const peopleVariations = {
+  heatwave: [
+    "People wear wide-brimmed sun hats and carry refillable water bottles",
+    "Figures seek shade under awnings, wearing light linen clothing",
+    "People hold small portable fans, wearing UV-protective sleeves",
+    "Figures wear baseball caps and sunglasses, carrying iced drinks",
+    "People stand under umbrellas for shade, wearing loose cotton shirts"
+  ],
+  flood: [
+    "People wear rubber boots and carry umbrellas",
+    "Figures have rolled-up trousers, stepping carefully around puddles",
+    "People in rain ponchos carry shopping bags above water level",
+    "Figures wear waterproof jackets with hoods up",
+    "People in wellies help each other navigate wet areas"
+  ],
+  windstorm: [
+    "People brace against wind, holding onto hats",
+    "Figures lean forward into the wind, coats flapping",
+    "People shield their faces, hair blown sideways",
+    "Figures grip railings or posts for stability",
+    "People hurry with heads down, clutching bags tightly"
+  ],
+  adaptation: [
+    "People relax comfortably in outdoor seating areas",
+    "Figures enjoy coffee at shaded terraces, looking content",
+    "Children play freely while adults chat nearby",
+    "People cycle or walk leisurely, enjoying the space",
+    "Figures gather socially in green communal areas"
+  ]
+};
+
+// Select random people instruction for variety
+function getRandomPeopleInstruction(scenario) {
+  const variations = peopleVariations[scenario];
+  if (!variations) return '';
+  const randomIndex = Math.floor(Math.random() * variations.length);
+  return variations[randomIndex];
+}
+
 // Validate image prompt (lighter validation for Gemini)
 function validateImagePrompt(prompt) {
   const issues = [];
@@ -320,8 +360,10 @@ FICTION: The green corridor keeps this block cooler. Kids play outside again.
 Remember: Vary the register. Some days are just... different now.` + (scenarioSuffix[scenario] || '');
 
   try {
-    // Get scenario reminder for user message
+    // Get scenario reminder and random people instruction for user message
     const reminder = scenarioReminders[scenario] || '';
+    const peopleInstruction = getRandomPeopleInstruction(scenario);
+    const fullReminder = reminder + (peopleInstruction ? `\n\nPEOPLE IN IMAGE: If there are people visible, show them as: ${peopleInstruction}` : '');
 
     // Fix media types in image content blocks AND inject scenario reminder into text
     const messages = (req.body.messages || []).map(msg => ({
@@ -338,10 +380,10 @@ Remember: Vary the register. Some days are just... different now.` + (scenarioSu
           };
         }
         // Inject scenario reminder into user text message
-        if (block.type === 'text' && reminder) {
+        if (block.type === 'text' && fullReminder) {
           return {
             ...block,
-            text: `${reminder}\n\n${block.text}`
+            text: `${fullReminder}\n\n${block.text}`
           };
         }
         return block;
