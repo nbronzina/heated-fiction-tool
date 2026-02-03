@@ -161,9 +161,10 @@ The IMAGE shows the threat; the FICTION describes the damage.
 Success rate: 85%+ for dramatic sky/atmosphere.
 `,
     adaptation: `
-PROMPT STRATEGY: Focus on HOPEFUL COLOR PALETTE only.
-Use: "CHANGE to warm golden hour light", "CHANGE vegetation to lush vibrant healthy green", "MAKE atmosphere pleasant inviting"
+PROMPT STRATEGY: Focus on CLEAR, FRESH, GREEN palette. NO golden/amber/orange tones.
+Use: "CHANGE sky to clear blue", "ENHANCE vegetation to lush vibrant green", "MAKE atmosphere fresh and pleasant"
 DO NOT request: solar panels, green roofs, bioswales, infrastructure. FLUX cannot add objects.
+DO NOT use: golden, amber, orange, haze, sepia - these make it look like a crisis scenario.
 The IMAGE shows a thriving future; the FICTION describes the policies and infrastructure.
 Success rate: 75%+ for color/mood transformation.
 `
@@ -448,7 +449,7 @@ IMG: CHANGE sky to flat grey overcast. MAKE all ground surfaces wet and reflecti
 FICTION: Water marks on the pharmacy wall—third set this year, María notes on her way to work. The sandbags by the door stay out permanently now.
 
 Adaptation (success):
-IMG: ADD warm golden hour lighting with slight haze. MAKE greens more vibrant and lush. CHANGE atmosphere to hopeful amber tones. Keep the exact same composition, camera angle, and framing.
+IMG: CHANGE sky to clear pleasant blue with soft white clouds. ENHANCE vegetation to lush vibrant green. MAKE atmosphere fresh, bright, and inviting. Keep the exact same composition, camera angle, and framing.
 FICTION: The green corridor keeps this block five degrees cooler. Kids actually play outside again. Someone on the planning committee got it right.
 
 Remember: Vary the register. Some days are just... different now.` + (scenarioSuffix[scenario] || '');
