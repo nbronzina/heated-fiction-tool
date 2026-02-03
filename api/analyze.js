@@ -295,10 +295,27 @@ export default async function handler(req, res) {
 
 ## CORE PHILOSOPHY
 - MUNDANE, NOT APOCALYPTIC: Show "a grey Tuesday in November", not catastrophe
-- ECO-ANXIETY BALANCE: Both anxiety and hope correlate with climate action. Never create paralyzing despair
+- SPECTRUM OF MUNDANITY: Climate change isn't constant emergency. Vary the register:
+  * Minor inconvenience (30%): "The café moved its umbrellas to the shaded side. Regulars adjusted."
+  * Normalized routine change (30%): "Sara checks the UV index before her run now. Most days she goes at 6am."
+  * Successful adaptation (20%): "The shade sails went up in 2029. The street feels almost pleasant."
+  * Bureaucratic normal (15%): "Heat protocol kicks in above 42°C. Third time this month."
+  * Latent tension (5%): "The fountain hasn't worked since April. Nobody knows when water comes back."
 - HYPER-LOCAL: People relate to their zip code. Make it feel specific, not generic
-- SCIENTIFIC GROUNDING: Scenarios align with IPCC AR6 Shared Socioeconomic Pathways (SSPs)
-- IMAGE + FICTION DIVISION: The IMAGE shows atmosphere/color; the FICTION carries narrative details
+- TIME HORIZON: Set fictions between 2030-2032 (optimal) or max 2036. Near enough to feel real.
+
+## EMOTIONAL REGISTER & VOICE
+Vary the narrative voice. Not always omniscient third person:
+- Casual neighbor observation
+- Someone's mental note while passing
+- Overheard conversation fragment
+- Detail noticed from the corner of an eye
+- Fact accepted without comment
+
+The tone should feel like texture of adapted life, not headlines.
+
+## PROHIBITED WORDS
+Never use: apocalyptic, devastating, catastrophic, scorching, desperate, flee, collapse, disaster, doom, crisis, emergency (unless naming an official protocol)
 
 ## FLUX KONTEXT CAPABILITIES (Critical - follow strictly)
 FLUX CAN reliably do:
@@ -314,9 +331,16 @@ FLUX CANNOT reliably do:
 - Transform dense vegetation patterns consistently
 - Add or modify people
 
+## IMAGE INTENSITY
+Not always maximum intensity. The image can show:
+- A mildly affected day, not peak crisis
+- Subtle signs of adaptation already in place
+- Normality with hints of change
+- Atmosphere that's "off" but not dramatic
+
 ## DIVISION OF LABOR
 - IMAGE PROMPT: Focus on sky, atmosphere, color palette, lighting, surface treatment
-- FICTION TEXT: Carry the narrative details (damage, infrastructure, policies, human response)
+- FICTION TEXT: Carry the narrative details (adaptation, routines, policies, human response)
 
 ## FLUX KONTEXT SYNTAX RULES
 - Use INSTRUCTIONAL verbs: "CHANGE the sky to..." / "ADD wet reflections" / "MAKE atmosphere..."
@@ -331,15 +355,23 @@ ${locationContext}
 ## OUTPUT FORMAT (follow exactly)
 IMG: [Your 40-word max FLUX Kontext prompt. Focus on SKY, ATMOSPHERE, COLOR, LIGHTING. No object additions. No line breaks.]
 
-FICTION: [2-3 sentences IN ENGLISH. This carries the FULL narrative. Describe damage, infrastructure, policies, human response—everything the image can't show. Be specific, mundane, hyper-local. Include a concrete detail: date, temperature, regulation, wind speed. Always write in English regardless of location.]
+FICTION: [2-3 sentences IN ENGLISH. Vary the emotional register—not every fiction is peak crisis. Show texture of adapted life. Be specific, hyper-local. Include one concrete detail. Always English regardless of location.]
 
-## EXAMPLE OUTPUT (HEATWAVE scenario, Madrid)
+## EXAMPLE OUTPUTS (showing variety)
 
-IMG: CHANGE sky to harsh orange haze with heat shimmer. CHANGE all grass and vegetation to dead brown straw. ADD dust to surfaces and warm desaturated tones throughout. Keep the exact same composition, camera angle, and framing.
+Heatwave (minor inconvenience):
+IMG: CHANGE sky to hazy white-yellow with gentle heat shimmer on horizon. MAKE colors slightly washed out and warm. ADD subtle dust to air. Keep the exact same composition, camera angle, and framing.
+FICTION: The bus shelter's solar panels power a small fan now. It helps, a little. August in this part of town means finding shade has become second nature.
 
-FICTION: The rooftop terrace at Calle Goya 47 sits empty at 14:00, August 2038. Municipal ordinance 847-C prohibits outdoor occupancy between 12:00-17:00 when temperatures exceed 42°C—today it reads 47°C. Residents wait for sunset.
+Flood (observation):
+IMG: CHANGE sky to flat grey overcast. MAKE all ground surfaces wet and reflective. ADD muted, desaturated tones throughout. Keep the exact same composition, camera angle, and framing.
+FICTION: Water marks on the pharmacy wall—third set this year, María notes on her way to work. The sandbags by the door stay out permanently now.
 
-Remember: The IMAGE shows mood and atmosphere. The FICTION tells the story.`;
+Adaptation (success):
+IMG: ADD warm golden hour lighting with slight haze. MAKE greens more vibrant and lush. CHANGE atmosphere to hopeful amber tones. Keep the exact same composition, camera angle, and framing.
+FICTION: The green corridor keeps this block five degrees cooler. Kids actually play outside again. Someone on the planning committee got it right.
+
+Remember: Vary the register. Some days are just... different now.`;
 
   try {
     // Fix media types in image content blocks
