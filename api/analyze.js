@@ -38,17 +38,27 @@ export default async function handler(req, res) {
 - Light: harsh yellow-orange, heat shimmer, haze
 - Atmosphere: abandoned during peak heat, water infrastructure visible
 
-### FLASH FLOOD 2030 (300mm rainfall in 3 hours, drainage failure)
-- Ground: brown muddy water 30-50cm deep
-- Surfaces: wet, mud-stained, water damage marks at consistent height
-- Sky: dark grey storm clouds
-- Atmosphere: emergency conditions, floating debris
+### FLASH FLOOD 2030 (300mm rainfall, drainage failure)
+IMPORTANT: FLUX cannot submerge elements in water. Focus on AFTERMATH and WATER DAMAGE:
+- Sky: dark grey storm clouds, heavy overcast
+- Ground: brown mud puddles, wet muddy surfaces, standing dirty water patches
+- Add: mud stains and waterline marks on lower walls and planters
+- Add: scattered soggy debris, flattened damaged plants
+- Add: wet leaves and trash stuck to all surfaces
+- Surfaces: dark, soaked, mud-covered
+- Atmosphere: post-flood emergency, everything drenched and damaged
+- DO NOT request water covering or submerging elements
 
-### EXTREME WIND 2035 (140km/h sustained winds, debris)
-- Flexible elements: bent sharply to one side, torn, flapping
-- Sky: dramatic dark storm clouds
-- Add: flying debris, leaves, papers in motion
-- Atmosphere: displaced objects, emergency conditions
+### EXTREME WIND 2035 (140km/h sustained winds)
+IMPORTANT: FLUX cannot bend trees or show motion. Focus on AFTERMATH and DAMAGE:
+- Sky: dramatic dark storm clouds, greenish-yellow tint
+- Add: fallen branches and debris scattered on ground
+- Add: torn and damaged canopy fabric, loose materials flapping
+- Add: overturned furniture, displaced objects, scattered planters
+- Add: leaves and papers scattered everywhere
+- Surfaces: wet from rain, puddles forming
+- Atmosphere: dark, dramatic, emergency lighting
+- DO NOT request bending trees or motion blur
 
 ### COMPOUND CRISIS 2050 (25 years of adaptation, still functioning)
 - Additions: solar panels, water tanks, collection systems
@@ -56,6 +66,12 @@ export default async function handler(req, res) {
 - Vegetation: growing on/around structure, urban farming
 - Light: warm dusty golden hour
 - Atmosphere: resilient occupation, adapted use
+
+## People modifications (if people are visible in the design):
+- HEAT: Add sun hats, UV face shields, water bottles, light loose clothing, seeking shade
+- FLOOD: Add rain boots, umbrellas, rolled-up pants, wading carefully, carrying belongings
+- WIND: Add people bracing, holding onto hats, hair and clothing disheveled
+- COMPOUND: Add face masks, adapted utilitarian clothing, carrying supplies
 
 ## Output format (follow exactly):
 IMG: [Your 40-word max FLUX Kontext prompt, no line breaks]

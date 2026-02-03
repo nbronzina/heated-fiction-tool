@@ -172,11 +172,13 @@
         </div>
         <img id="result-generated" alt="Speculative future" style="width:100%;height:480px;object-fit:cover;display:none" />
         <div id="gen-label" style="position:absolute;top:20px;left:20px;padding:6px 14px;backdrop-filter:blur(8px);font-family:'DM Mono',monospace;font-size:10px;letter-spacing:3px;color:#fff;text-transform:uppercase"></div>
+        <span id="watermark" style="display:none;position:absolute;bottom:12px;right:12px;color:rgba(253,207,164,0.7);font-family:'DM Mono',monospace;font-size:11px;letter-spacing:2px;text-shadow:0 1px 3px rgba(0,0,0,0.5)">heated.studio</span>
       </div>
     </div>
 
     <div style="max-width:1100px;margin:0 auto;padding:32px 48px;display:flex;gap:16px">
       <button class="btn btn-ghost" onclick="resetAll()" style="flex:1">New fiction</button>
+      <button class="btn btn-ghost" onclick="downloadImage()" style="flex:1">Download image</button>
       <a href="https://calendly.com/indiantinker/quick-chat" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="flex:1;text-align:center;text-decoration:none;font-size:11px">Commission a project →</a>
     </div>
 
@@ -271,6 +273,7 @@
       document.getElementById("result-generated").src = "";
       document.getElementById("result-generated").style.display = "none";
       document.getElementById("gen-shimmer").style.display = "none";
+      document.getElementById("watermark").style.display = "none";
 
       goStep(0);
     }
@@ -346,7 +349,8 @@
         if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
         const text = (data.content || []).map(i => i.text || "").join("\n");
         const imgMatch = text.match(/IMG:\s*\n?([\s\S]*?)(?=FICTION:|$)/i);
-        const imgPrompt = imgMatch ? imgMatch[1].trim() : "";
+        let imgPrompt = imgMatch ? imgMatch[1].trim() : "";
+        imgPrompt = imgPrompt.replace(/\*+/g, '').trim();
         console.log("IMG PROMPT:", imgPrompt);
         generatedPrompt = imgPrompt;
         renderResults();
@@ -396,6 +400,18 @@
     function showGeneratedImage(blobUrl) {
       document.getElementById("gen-shimmer").style.display = "none";
       const img = document.getElementById("result-generated"); img.src = blobUrl; img.style.display = "block";
+      document.getElementById("watermark").style.display = "block";
+    }
+
+    function downloadImage() {
+      const img = document.getElementById("result-generated");
+      if (!img.src) return;
+      const link = document.createElement("a");
+      link.href = img.src;
+      link.download = "heated-fiction-" + Date.now() + ".jpg";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
 
   </script>
