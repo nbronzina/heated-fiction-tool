@@ -21,7 +21,7 @@
     .sand { color: #fdcfa4; }
     .muted { color: #7a706a; }
     .dim { color: #6b6058; }
-    .subdim { color: #5a5048; }
+    .subdim { color: #7a6e64; }
     .deep { color: #4d4340; }
     .light { color: #a09890; }
     .warm { color: #e8e0d8; }
@@ -40,6 +40,7 @@
     .btn:disabled { opacity: 0.25; cursor: not-allowed; transform: none !important; }
     .btn-primary { padding: 18px 48px; background: #fdcfa4; color: #332b28; font-weight: 500; }
     .btn-ghost { padding: 16px 32px; background: none; border: 1px solid #4d4340; color: #7a706a; }
+    .btn-ghost:hover { border-color: #fdcfa4; color: #fdcfa4; }
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     @keyframes slideUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
     @keyframes breathe { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
@@ -83,16 +84,20 @@
     .upload-zone.has-image { min-height: auto; border-color: rgba(253,207,164,0.15); background: #2a2320; }
     .results-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; align-items: start; }
     .results-grid img { width: 100%; height: auto; object-fit: contain; display: block; max-height: 80vh; }
-    .tiers-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 2px; }
-    .step { display: none; }
+    .step { display: none; padding: 120px 48px 80px; }
     .step.active { display: block; }
+    .progress-dots { display: flex; gap: 8px; margin-bottom: 24px; }
+    .progress-dots .dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,245,234,0.2); transition: background 0.3s; }
+    .progress-dots .dot.active { background: #fdcfa4; }
+    .gen-error { padding: 24px; border: 1px solid #E8572A; background: rgba(232,87,42,0.1); text-align: center; color: #fff5ea; margin-top: 20px; }
     @media (max-width: 768px) {
       .results-grid { grid-template-columns: 1fr; }
       .results-grid img { max-height: 60vh; }
-      .tiers-grid { grid-template-columns: 1fr; }
       .scenario-grid { grid-template-columns: 1fr !important; }
       .meta-bar { flex-direction: column; gap: 16px !important; }
       .footer-bar { flex-direction: column; gap: 12px; text-align: center; }
+      .step { padding: 80px 24px 60px !important; }
+      .btn-ghost, #nav-reset { padding: 12px 20px; min-height: 44px; }
     }
   </style>
 </head>
@@ -121,6 +126,7 @@
   </div>
 
   <div id="step-1" class="step" style="min-height:100vh;padding:120px 48px 80px;max-width:960px">
+    <div class="progress-dots"><span class="dot active" data-step="1"></span><span class="dot" data-step="2"></span><span class="dot" data-step="3"></span></div>
     <p class="mono dim" style="font-size:10px;letter-spacing:4px;text-transform:uppercase;margin-bottom:12px">Step 01</p>
     <h2 class="serif" style="font-size:clamp(28px,4vw,44px);font-weight:400;color:#fff;margin-bottom:12px">Which future?</h2>
     <p class="muted" style="font-size:14px;margin-bottom:56px">Select the climate scenario your design will inhabit.</p>
@@ -128,7 +134,8 @@
   </div>
 
   <div id="step-2" class="step" style="min-height:100vh;padding:120px 48px 80px;max-width:720px">
-    <div id="scenario-badge" style="display:flex;align-items:center;gap:12px;margin-bottom:48px"></div>
+    <div class="progress-dots"><span class="dot active" data-step="1"></span><span class="dot active" data-step="2"></span><span class="dot" data-step="3"></span></div>
+    <div id="scenario-badge" style="display:flex;align-items:center;gap:12px;margin-bottom:32px"></div>
     <p class="mono dim" style="font-size:10px;letter-spacing:4px;text-transform:uppercase;margin-bottom:12px">Step 02</p>
     <h2 class="serif" style="font-size:clamp(28px,4vw,44px);font-weight:400;color:#fff;margin-bottom:12px">Show us the design.</h2>
     <p class="muted" style="font-size:14px;margin-bottom:48px">Building, product, interior, site — any designed thing.</p>
@@ -182,19 +189,19 @@
       <a href="https://calendly.com/indiantinker/quick-chat" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="flex:1;text-align:center;text-decoration:none;font-size:11px">Commission a project →</a>
     </div>
 
-    <div style="max-width:1100px;margin:0 auto;padding:0 48px">
-      <div style="border-top:1px solid rgba(253,207,164,0.06);padding-top:80px">
-        <p class="mono dim" style="font-size:10px;letter-spacing:5px;text-transform:uppercase;margin-bottom:16px">What we do</p>
-        <h3 class="serif" style="font-size:clamp(24px,3vw,36px);font-weight:400;color:#fff;margin-bottom:20px;max-width:600px">We make climate futures <span style="font-style:italic;color:#fdcfa4">tangible.</span></h3>
-        <p class="light" style="font-size:15px;line-height:1.8;max-width:600px;margin-bottom:56px">Heated Studio uses design fiction and speculative design to turn abstract climate risk into artefacts your team can experience — objects, interfaces, spaces, and narratives from the near future.</p>
-        <div class="tiers-grid" id="tiers"></div>
+    <div style="max-width:1100px;margin:0 auto;padding:64px 48px 0">
+      <div style="border-top:1px solid rgba(253,207,164,0.06);padding-top:48px">
+        <p class="mono dim" style="font-size:10px;letter-spacing:4px;text-transform:uppercase;margin-bottom:16px">Want to go deeper?</p>
+        <p class="light" style="font-size:15px;line-height:1.8;max-width:500px;margin-bottom:24px">We create artefacts from the near future—using design fiction and AI to help organizations make resilient decisions in an uncertain climate.</p>
+        <a href="https://calendly.com/indiantinker/quick-chat" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="text-decoration:none;display:inline-block">Book a call →</a>
       </div>
     </div>
 
-    <div class="footer-bar" style="max-width:1100px;margin:120px auto 0;padding:32px 48px 0;border-top:1px solid rgba(253,207,164,0.06);display:flex;justify-content:space-between;align-items:center">
+    <div class="footer-bar" style="max-width:1100px;margin:80px auto 0;padding:32px 48px 0;border-top:1px solid rgba(253,207,164,0.06);display:flex;justify-content:space-between;align-items:center">
       <span class="mono deep" style="font-size:11px;letter-spacing:3px">HEATED STUDIO</span>
       <span class="deep" style="font-size:11px">Calle de Goya 47, Madrid</span>
       <div style="display:flex;gap:20px">
+        <a href="mailto:hello@heated.studio" class="mono subdim" style="text-decoration:none;font-size:11px">hello@heated.studio</a>
         <a href="https://www.heated.studio" target="_blank" class="mono subdim" style="text-decoration:none;font-size:11px">Web</a>
         <a href="https://linkedin.com/company/heated" target="_blank" class="mono subdim" style="text-decoration:none;font-size:11px">LinkedIn</a>
         <a href="https://www.instagram.com/heated.studio/" target="_blank" class="mono subdim" style="text-decoration:none;font-size:11px">Instagram</a>
@@ -225,12 +232,6 @@
         subtitle: "Heat + scarcity + blackouts + overcrowding. The scenario nobody renders.", color: "#D4A843",
         prompt: `Apply the COMPOUND CRISIS 2050 scenario to this design.`
       }
-    ];
-
-    const TIERS = [
-      { tag: "Workshop", name: "Microfiction Workshops", duration: "3 hours", desc: "Immersive sessions turning everyday experiences into speculative lenses for climate adaptation.", who: "Innovation teams, universities" },
-      { tag: "Exploration", name: "Climate Fiction Exploration", duration: "5 weeks", desc: "Weak signal analysis, speculative prototyping, and tangible future artefacts built around your specific context.", who: "Consultancies, government, innovation teams", featured: true },
-      { tag: "Prototyping", name: "Speculative Design & AI", duration: "4 weeks", desc: "Collaborative storytelling and rapid prototyping. Functional artefacts from possible futures you can hold, test, and learn from.", who: "Organizations beyond traditional planning" }
     ];
 
     let currentStep = 0, selectedScenario = null, uploadedDataUrl = null, imageBase64 = null, imageMediaType = "image/jpeg", generatedPrompt = "", locationData = null, originalWidth = null, originalHeight = null;
@@ -282,6 +283,8 @@
       document.getElementById("result-generated").style.display = "none";
       document.getElementById("gen-shimmer").style.display = "none";
       document.getElementById("watermark").style.display = "none";
+      const genError = document.getElementById("gen-error");
+      if (genError) genError.remove();
 
       goStep(0);
     }
@@ -295,16 +298,6 @@
         d.innerHTML = '<div style="position:absolute;top:0;left:0;width:3px;height:100%;background:'+s.color+';opacity:0.6"></div><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px"><div><p class="serif" style="font-size:22px;color:#fff;margin-bottom:4px">'+s.label+'</p><p class="mono dim" style="font-size:10px;letter-spacing:2px">'+s.location+' — '+s.year+'</p></div><span class="mono" style="font-size:20px;font-weight:300;color:'+s.color+'">'+s.stat+'</span></div><p class="muted" style="font-size:13px;line-height:1.6">'+s.subtitle+'</p>';
         d.onclick = () => { selectedScenario = s; renderUploadStep(); goStep(2); };
         c.appendChild(d);
-      });
-    })();
-
-    (function() {
-      const c = document.getElementById("tiers");
-      TIERS.forEach(t => {
-        const e = document.createElement("div");
-        e.style.cssText = "background:"+(t.featured?"rgba(253,207,164,0.04)":"rgba(255,255,255,0.015)")+";border:"+(t.featured?"1px solid rgba(253,207,164,0.12)":"1px solid transparent")+";padding:40px 28px;display:flex;flex-direction:column";
-        e.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px"><span class="mono" style="font-size:9px;letter-spacing:3px;text-transform:uppercase;color:'+(t.featured?"#fdcfa4":"#6b6058")+';padding:4px 10px;border:1px solid '+(t.featured?"rgba(253,207,164,0.25)":"#4d4340")+'">'+t.tag+'</span><span class="mono dim" style="font-size:10px">'+t.duration+'</span></div><p class="serif" style="font-size:20px;color:#fff;margin-bottom:16px">'+t.name+'</p><p style="font-size:13px;color:#8a8078;line-height:1.7;flex:1;margin-bottom:20px">'+t.desc+'</p><p class="mono subdim" style="font-size:10px;letter-spacing:1px">For: '+t.who+'</p>';
-        c.appendChild(e);
       });
     })();
 
@@ -470,11 +463,11 @@
               showGeneratedImage(imgData.images[0].url);
             } else {
               console.error("FAL error:", imgData.error || imgData.detail || "No image returned");
-              document.getElementById("gen-shimmer").style.display = "none";
+              showGenError();
             }
           } catch(e) {
             console.error("Image gen failed:", e);
-            document.getElementById("gen-shimmer").style.display = "none";
+            showGenError();
           }
         }
       } catch(err) {
@@ -486,6 +479,46 @@
     }
 
     function setLoading(msg) { document.getElementById("loading-stage").textContent = msg; }
+
+    function showGenError() {
+      document.getElementById("gen-shimmer").style.display = "none";
+      const container = document.getElementById("result-gen-container");
+      const existing = document.getElementById("gen-error");
+      if (existing) existing.remove();
+      const errorDiv = document.createElement("div");
+      errorDiv.id = "gen-error";
+      errorDiv.className = "gen-error";
+      errorDiv.innerHTML = '<p style="margin:0 0 16px 0">Image generation failed. Please try again.</p><button class="btn btn-ghost" onclick="retryGeneration()">Retry</button>';
+      container.appendChild(errorDiv);
+    }
+
+    async function retryGeneration() {
+      const errorDiv = document.getElementById("gen-error");
+      if (errorDiv) errorDiv.remove();
+      document.getElementById("gen-shimmer").style.display = "flex";
+      if (!generatedPrompt) return;
+      try {
+        const imgRes = await fetch("/api/generate-image", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            prompt: generatedPrompt,
+            image_base64: imageBase64,
+            media_type: imageMediaType,
+            width: originalWidth,
+            height: originalHeight
+          })
+        });
+        const imgData = await imgRes.json();
+        if (imgData.images && imgData.images[0] && imgData.images[0].url) {
+          showGeneratedImage(imgData.images[0].url);
+        } else {
+          showGenError();
+        }
+      } catch(e) {
+        showGenError();
+      }
+    }
 
     function renderResults() {
       document.getElementById("result-original").src = uploadedDataUrl;
