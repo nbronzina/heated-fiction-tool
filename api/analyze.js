@@ -331,12 +331,30 @@ FLUX CANNOT reliably do:
 - Transform dense vegetation patterns consistently
 - Add or modify people
 
-## IMAGE INTENSITY
-Not always maximum intensity. The image can show:
-- A mildly affected day, not peak crisis
-- Subtle signs of adaptation already in place
-- Normality with hints of change
-- Atmosphere that's "off" but not dramatic
+## IMAGE INTENSITY SPECTRUM
+Match image intensity to fiction register. Not always orange apocalyptic sky.
+
+HEATWAVE:
+- Intense: orange sky, dense haze, dead vegetation
+- Moderate: yellowish sky, visible heat but not extreme
+- Mild: harsh light, hard shadows, stressed but living vegetation
+
+FLOOD:
+- Intense: large puddles, very wet surfaces
+- Moderate: damp ground, uniform grey sky
+- Mild: post-rain, some wet surfaces, scattered clouds
+
+WINDSTORM:
+- Intense: dark dramatic sky, turbulent clouds
+- Moderate: threatening sky, strong directional light
+- Mild: dynamic cloudy sky, visible breeze in vegetation
+
+ADAPTATION:
+- Intense: lush vegetation, perfect golden light
+- Moderate: healthy vegetation, pleasant day
+- Mild: subtle improvements, calm atmosphere
+
+Rule: Minor inconvenience = mild visual. Latent tension = moderate. Bureaucratic protocol = intense OR mild depending on context.
 
 ## DIVISION OF LABOR
 - IMAGE PROMPT: Focus on sky, atmosphere, color palette, lighting, surface treatment
