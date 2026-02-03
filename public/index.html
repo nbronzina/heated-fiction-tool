@@ -448,6 +448,39 @@
       });
     }
 
+    // Compress image before converting to base64
+    function compressImage(file, maxWidth = 1600, quality = 0.8) {
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            let width = img.width;
+            let height = img.height;
+
+            // Reduce if larger than maxWidth
+            if (width > maxWidth) {
+              height = Math.round((height * maxWidth) / width);
+              width = maxWidth;
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+
+            // Always export as JPEG for maximum compression
+            const dataUrl = canvas.toDataURL('image/jpeg', quality);
+            const base64 = dataUrl.split(',')[1];
+            resolve({ base64, mediaType: 'image/jpeg', dataUrl });
+          };
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
     function extractExifLocation(file) {
       return new Promise((resolve) => {
         EXIF.getData(file, function() {
@@ -491,29 +524,32 @@
       originalHeight = null;
       document.getElementById("location-badge").style.display = "none";
 
-      // Get image dimensions
+      // Get original image dimensions
       try {
         const dimensions = await getImageDimensions(file);
         originalWidth = dimensions.width;
         originalHeight = dimensions.height;
-        console.log("Image dimensions:", originalWidth, "x", originalHeight);
+        console.log("Original image dimensions:", originalWidth, "x", originalHeight);
       } catch (e) {
         console.log("Could not get image dimensions:", e);
       }
 
-      // Read file as data URL
-      const r = new FileReader();
-      r.onload = (ev) => {
-        uploadedDataUrl = ev.target.result;
-        imageBase64 = uploadedDataUrl.split(",")[1];
-        imageMediaType = file.type || "image/jpeg";
-        document.getElementById("upload-placeholder").style.display = "none";
-        document.getElementById("upload-preview").style.display = "block";
-        document.getElementById("preview-img").src = uploadedDataUrl;
-        uploadZone.classList.add("has-image");
-        const b = document.getElementById("generate-btn"); b.disabled = false; b.style.background = selectedScenario.color; b.style.color = "#332b28";
-      };
-      r.readAsDataURL(file);
+      // Compress and convert to base64
+      const { base64, mediaType, dataUrl } = await compressImage(file);
+      imageBase64 = base64;
+      imageMediaType = mediaType;
+      uploadedDataUrl = dataUrl;
+      console.log("Compressed image size:", Math.round(base64.length / 1024), "KB");
+
+      document.getElementById("upload-placeholder").style.display = "none";
+      document.getElementById("upload-preview").style.display = "block";
+      document.getElementById("preview-img").src = dataUrl;
+      uploadZone.classList.add("has-image");
+
+      const genBtn = document.getElementById("generate-btn");
+      genBtn.disabled = false;
+      genBtn.style.background = selectedScenario.color;
+      genBtn.style.color = "#332b28";
 
       // Extract EXIF location (async, don't block UI)
       try {
