@@ -237,28 +237,28 @@ FICTION TONE: The FICTION describes the aftermath and damage. "The storm that hi
 `,
 
   adaptation: `
-## ADAPTATION — SSP1-2.6 (MODERATE PERFORMANCE ⭐⭐⭐)
-Hopeful future through COLOR and MOOD transformation, not infrastructure addition.
+## ADAPTATION — SSP1-2.6 (POSITIVE SCENARIO ⭐⭐⭐⭐)
+This is a SUCCESS story. Show a PLEASANT, THRIVING environment.
 
-Why this works: FLUX can shift palettes and enhance vegetation. It cannot add solar panels or green roofs.
+CRITICAL: This is NOT a crisis scenario. NO haze, NO orange sky, NO apocalyptic tones.
 
 VISUAL EFFECTS (reliable):
-- Light: CHANGE to warm golden hour lighting, soft and inviting
-- Vegetation: CHANGE to lush, vibrant, healthy green. Thriving plants.
-- Sky: CHANGE to pleasant blue with soft clouds
-- Atmosphere: MAKE warm, comfortable, hopeful
-- Colors: Enhance greens, warm tones, Mediterranean palette
+- Sky: CHANGE to CLEAR pleasant blue sky with soft white clouds. NO haze, NO orange.
+- Light: CHANGE to soft natural daylight or gentle warm afternoon light. NOT harsh, NOT orange.
+- Vegetation: CHANGE to lush, vibrant, healthy deep green. Thriving plants.
+- Atmosphere: MAKE fresh, clear, comfortable, inviting
+- Colors: Fresh greens, clean blues, natural warm tones. NO sepia, NO orange filter.
 
-DO NOT REQUEST (FLUX cannot add objects):
-- Solar panels
-- Green roofs
-- Rain gardens or bioswales
-- Permeable paving
-- New infrastructure
+AVOID COMPLETELY:
+- Orange or amber sky tones
+- Haze, dust, or pollution
+- Heat shimmer or distortion
+- Apocalyptic or stressed atmosphere
+- Solar panels, green roofs (FLUX cannot add objects)
 
-ATMOSPHERE: Pleasant, hopeful, green, thriving — a Tuesday in the adapted city
+ATMOSPHERE: Fresh, pleasant, green, thriving — a beautiful day in a well-adapted city
 
-FICTION TONE: The FICTION carries ALL the adaptation narrative. Describe the policies that worked, the community gardens, the green infrastructure that was installed, the improved quality of life. The image shows a pleasant, thriving environment; the text explains HOW we got there.
+FICTION TONE: The FICTION describes the SUCCESS. What policies worked? What community solutions? How did quality of life improve? This is a hopeful story of adaptation done right.
 `
 };
 
@@ -349,10 +349,10 @@ WINDSTORM:
 - Moderate: threatening sky, strong directional light
 - Mild: dynamic cloudy sky, visible breeze in vegetation
 
-ADAPTATION:
-- Intense: lush vegetation, perfect golden light
-- Moderate: healthy vegetation, pleasant day
-- Mild: subtle improvements, calm atmosphere
+ADAPTATION (always positive, NEVER hazy/orange):
+- Intense: lush vibrant vegetation, clear blue sky, beautiful day
+- Moderate: healthy green vegetation, pleasant clear atmosphere
+- Mild: subtle green improvements, calm fresh atmosphere
 
 Rule: Minor inconvenience = mild visual. Latent tension = moderate. Bureaucratic protocol = intense OR mild depending on context.
 
