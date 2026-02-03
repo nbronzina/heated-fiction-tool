@@ -21,14 +21,14 @@ function checkRateLimit(ip) {
 const analysisCache = new Map();
 const CACHE_TTL = 3600000; // 1 hour
 
-function getCacheKey(imageBase64, scenario, locationCity) {
-  // Use first 2000 chars of base64 + scenario + location for unique hash
-  const crypto = require('crypto');
-  return crypto.createHash('md5')
-    .update(imageBase64.slice(0, 2000))
-    .update(scenario || '')
-    .update(locationCity || '')
-    .digest('hex');
+async function getCacheKey(imageBase64, scenario, locationCity) {
+  // Use Web Crypto API (ES Module compatible)
+  const data = imageBase64.slice(0, 2000) + (scenario || '') + (locationCity || '');
+  const encoder = new TextEncoder();
+  const dataBuffer = encoder.encode(data);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', dataBuffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 16);
 }
 
 // Detect media type from base64 header bytes
@@ -280,7 +280,7 @@ export default async function handler(req, res) {
 
   // Check cache first
   const imageData = req.body.messages?.[0]?.content?.find(b => b.type === 'image')?.source?.data || '';
-  const cacheKey = getCacheKey(imageData, scenario, location?.city);
+  const cacheKey = await getCacheKey(imageData, scenario, location?.city);
   const cached = analysisCache.get(cacheKey);
   if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
     console.log('[CACHE HIT]', cacheKey.slice(0, 8));
