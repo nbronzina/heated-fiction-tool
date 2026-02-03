@@ -20,10 +20,11 @@ function checkRateLimit(ip) {
 // Analysis caching (resets on cold start, sufficient for this volume)
 const analysisCache = new Map();
 const CACHE_TTL = 3600000; // 1 hour
+const CACHE_VERSION = 'v2'; // bump to invalidate cache
 
 async function getCacheKey(imageBase64, scenario, locationCity) {
   // Use Web Crypto API (ES Module compatible)
-  const data = imageBase64.slice(0, 2000) + (scenario || '') + (locationCity || '');
+  const data = CACHE_VERSION + imageBase64.slice(0, 2000) + (scenario || '') + (locationCity || '');
   const encoder = new TextEncoder();
   const dataBuffer = encoder.encode(data);
   const hashBuffer = await crypto.subtle.digest('SHA-256', dataBuffer);
@@ -299,6 +300,15 @@ export default async function handler(req, res) {
   const scenario = req.body.scenario || 'heatwave';
   const location = req.body.location || null;
 
+  // Debug logging for scenario investigation
+  console.log('=== SCENARIO DEBUG ===');
+  console.log('Scenario received:', scenario);
+  console.log('Has instructions:', !!scenarioInstructions[scenario]);
+  if (scenario === 'adaptation') {
+    console.log('Adaptation instructions preview:', scenarioInstructions.adaptation?.substring(0, 300));
+  }
+  console.log('========================');
+
   // Check cache first
   const imageData = req.body.messages?.[0]?.content?.find(b => b.type === 'image')?.source?.data || '';
   const cacheKey = await getCacheKey(imageData, scenario, location?.city);
@@ -439,6 +449,17 @@ Remember: Vary the register. Some days are just... different now.`;
       messages,
       system: systemPrompt
     };
+
+    // Debug: Log system prompt for adaptation
+    if (scenario === 'adaptation') {
+      console.log('=== ADAPTATION PROMPT DEBUG ===');
+      console.log('System prompt length:', systemPrompt.length);
+      console.log('Contains CRITICAL INSTRUCTION:', systemPrompt.includes('CRITICAL INSTRUCTION'));
+      console.log('Contains "kids playing":', systemPrompt.includes('kids playing'));
+      console.log('Contains "DO NOT write about":', systemPrompt.includes('DO NOT write about'));
+      console.log('Scenario guide preview:', scenarioGuide?.substring(0, 400));
+      console.log('================================');
+    }
 
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
