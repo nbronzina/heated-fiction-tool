@@ -44,6 +44,7 @@ IMPORTANT: FLUX cannot submerge elements in water. Focus on AFTERMATH and WATER 
 - Ground: brown mud puddles, wet muddy surfaces, standing dirty water patches
 - Add: mud stains and waterline marks on lower walls and planters
 - Add: scattered soggy debris, flattened damaged plants
+- Vegetation: wilted, flattened, rotting flowers, waterlogged dying plants, brown muddy foliage
 - Add: wet leaves and trash stuck to all surfaces
 - Surfaces: dark, soaked, mud-covered
 - Atmosphere: post-flood emergency, everything drenched and damaged
