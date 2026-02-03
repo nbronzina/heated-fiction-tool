@@ -57,6 +57,7 @@ IMPORTANT: FLUX cannot bend trees or show motion. Focus on AFTERMATH and DAMAGE:
 - Add: torn and damaged canopy fabric, loose materials flapping
 - Add: overturned furniture, displaced objects, scattered planters
 - Add: leaves and papers scattered everywhere
+- Vegetation: stripped bare, broken stems, flattened plants, scattered petals, damaged shredded foliage
 - Surfaces: wet from rain, puddles forming
 - Atmosphere: dark, dramatic, emergency lighting
 - DO NOT request bending trees or motion blur
