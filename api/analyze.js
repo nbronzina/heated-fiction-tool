@@ -33,7 +33,7 @@ export default async function handler(req, res) {
 
 ### EXTREME HEAT 2040 (45°C heatwaves, water scarcity, UV damage)
 - Materials: bleached, faded, cracked, warped
-- Vegetation: dead, brown, dried
+- Vegetation: CHANGE all grass, plants, and trees to dead, brown, dried, withered. No green vegetation should remain.
 - Surfaces: dusty, heat-damaged
 - Light: harsh yellow-orange, heat shimmer, haze
 - Atmosphere: abandoned during peak heat, water infrastructure visible
@@ -43,9 +43,8 @@ IMPORTANT: FLUX cannot submerge elements in water. Focus on AFTERMATH and WATER 
 - Sky: dark grey storm clouds, heavy overcast
 - Ground: brown mud puddles, wet muddy surfaces, standing dirty water patches
 - Add: mud stains and waterline marks on lower walls and planters
-- Add: scattered soggy debris, flattened damaged plants
-- Vegetation: wilted, flattened, rotting flowers, waterlogged dying plants, brown muddy foliage
-- Add: wet leaves and trash stuck to all surfaces
+- Vegetation: CHANGE all grass, flowers, and plants to wilted, flattened, brown, waterlogged, rotting. No green vegetation should remain.
+- Add: scattered soggy debris, wet leaves stuck to surfaces
 - Surfaces: dark, soaked, mud-covered
 - Atmosphere: post-flood emergency, everything drenched and damaged
 - DO NOT request water covering or submerging elements
@@ -57,7 +56,7 @@ IMPORTANT: FLUX cannot bend trees or show motion. Focus on AFTERMATH and DAMAGE:
 - Add: torn and damaged canopy fabric, loose materials flapping
 - Add: overturned furniture, displaced objects, scattered planters
 - Add: leaves and papers scattered everywhere
-- Vegetation: stripped bare, broken stems, flattened plants, scattered petals, damaged shredded foliage
+- Vegetation: CHANGE plants and flowers to stripped, broken, flattened, shredded. Bare branches, scattered petals.
 - Surfaces: wet from rain, puddles forming
 - Atmosphere: dark, dramatic, emergency lighting
 - DO NOT request bending trees or motion blur
