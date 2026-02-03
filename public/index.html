@@ -71,6 +71,10 @@
       overflow: hidden;
     }
     .sc-card:hover { transform: scale(1.015); }
+    .sc-card[data-scenario="heatwave"] { background: linear-gradient(135deg, rgba(232, 87, 42, 0.12) 0%, transparent 50%); }
+    .sc-card[data-scenario="flood"] { background: linear-gradient(135deg, rgba(42, 143, 232, 0.12) 0%, transparent 50%); }
+    .sc-card[data-scenario="windstorm"] { background: linear-gradient(135deg, rgba(139, 168, 189, 0.15) 0%, transparent 50%); }
+    .sc-card[data-scenario="adaptation"] { background: linear-gradient(135deg, rgba(212, 168, 67, 0.12) 0%, transparent 50%); }
     .upload-zone {
       border: 1px solid rgba(253,207,164,0.08);
       background: rgba(253,207,164,0.01);
@@ -134,6 +138,40 @@
     .toast.visible {
       transform: translateX(-50%) translateY(0);
       opacity: 1;
+    }
+    .share-section {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid rgba(253, 207, 164, 0.15);
+    }
+    .share-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      color: #7a706a;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+    .share-buttons { display: flex; gap: 8px; }
+    .share-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 1px solid rgba(253, 207, 164, 0.3);
+      background: transparent;
+      color: #fdcfa4;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+    .share-btn:hover {
+      background: #fdcfa4;
+      color: #332b28;
+      transform: scale(1.05);
     }
     @media (max-width: 768px) {
       .results-grid { grid-template-columns: 1fr; }
@@ -234,6 +272,20 @@
         <span class="fiction-location" id="fiction-location"></span>
       </div>
       <p id="fiction-text"></p>
+      <div class="share-section">
+        <span class="share-label">Share</span>
+        <div class="share-buttons">
+          <button id="share-twitter" class="share-btn" title="Share on X">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+          </button>
+          <button id="share-linkedin" class="share-btn" title="Share on LinkedIn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+          </button>
+          <button id="share-copy" class="share-btn" title="Copy link">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+          </button>
+        </div>
+      </div>
     </div>
 
     <div style="max-width:1100px;margin:0 auto;padding:32px 48px;display:flex;gap:16px">
@@ -363,7 +415,7 @@
     (function() {
       const c = document.getElementById("scenario-cards");
       SCENARIOS.forEach(s => {
-        const d = document.createElement("div"); d.className = "sc-card";
+        const d = document.createElement("div"); d.className = "sc-card"; d.setAttribute('data-scenario', s.label.toLowerCase());
         d.innerHTML = '<div style="position:absolute;top:0;left:0;width:3px;height:100%;background:'+s.color+';opacity:0.6"></div><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px"><div><p class="serif" style="font-size:22px;color:#fff;margin-bottom:4px">'+s.label+'</p><p class="mono dim" style="font-size:10px;letter-spacing:2px">'+s.location+'</p></div><span class="mono" style="font-size:20px;font-weight:300;color:'+s.color+'">'+s.stat+'</span></div><p class="muted" style="font-size:13px;line-height:1.6">'+s.subtitle+'</p>';
         d.onclick = () => { selectedScenario = s; renderUploadStep(); goStep(2); };
         c.appendChild(d);
@@ -684,6 +736,26 @@
         btn.disabled = false;
       }
     }
+
+    // Share functionality
+    document.getElementById('share-twitter').addEventListener('click', () => {
+      const loc = locationData ? locationData.city : (selectedScenario ? selectedScenario.location : 'a building');
+      const scenario = selectedScenario ? selectedScenario.label : 'climate';
+      const text = `${scenario} design fiction for ${loc} — created with Heated Studio`;
+      const url = 'https://heated.studio';
+      window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank', 'width=550,height=420');
+    });
+
+    document.getElementById('share-linkedin').addEventListener('click', () => {
+      const url = 'https://heated.studio';
+      window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`, '_blank', 'width=550,height=420');
+    });
+
+    document.getElementById('share-copy').addEventListener('click', () => {
+      navigator.clipboard.writeText('https://heated.studio').then(() => {
+        showToast('Link copied!');
+      });
+    });
 
   </script>
 </body>

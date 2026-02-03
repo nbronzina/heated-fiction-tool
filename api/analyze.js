@@ -17,6 +17,20 @@ function checkRateLimit(ip) {
   return true;
 }
 
+// Analysis caching (resets on cold start, sufficient for this volume)
+const analysisCache = new Map();
+const CACHE_TTL = 3600000; // 1 hour
+
+function getCacheKey(imageBase64, scenario, locationCity) {
+  // Use first 2000 chars of base64 + scenario + location for unique hash
+  const crypto = require('crypto');
+  return crypto.createHash('md5')
+    .update(imageBase64.slice(0, 2000))
+    .update(scenario || '')
+    .update(locationCity || '')
+    .digest('hex');
+}
+
 // Detect media type from base64 header bytes
 function getMediaTypeFromBase64(base64String) {
   if (base64String.startsWith('/9j/')) return 'image/jpeg';
@@ -263,6 +277,16 @@ export default async function handler(req, res) {
   // Extract scenario and location from request
   const scenario = req.body.scenario || 'heatwave';
   const location = req.body.location || null;
+
+  // Check cache first
+  const imageData = req.body.messages?.[0]?.content?.find(b => b.type === 'image')?.source?.data || '';
+  const cacheKey = getCacheKey(imageData, scenario, location?.city);
+  const cached = analysisCache.get(cacheKey);
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+    console.log('[CACHE HIT]', cacheKey.slice(0, 8));
+    return res.status(200).json(cached.data);
+  }
+
   const locationContext = buildLocationContext(location);
   const scenarioGuide = scenarioInstructions[scenario] || scenarioInstructions.heatwave;
   const promptGuidance = buildImagePromptGuidance(scenario);
@@ -372,6 +396,10 @@ Remember: The IMAGE shows mood and atmosphere. The FICTION tells the story.`;
       console.log('Validation:', validation.valid ? '✓ Valid' : `✗ Issues: ${validation.issues.join(', ')}`);
       console.log('=======================');
     }
+
+    // Store in cache
+    analysisCache.set(cacheKey, { data, timestamp: Date.now() });
+    console.log('[CACHE MISS - STORED]', cacheKey.slice(0, 8));
 
     res.status(200).json(data);
   } catch (err) {
