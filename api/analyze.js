@@ -17,21 +17,6 @@ function checkRateLimit(ip) {
   return true;
 }
 
-// Analysis caching (resets on cold start, sufficient for this volume)
-const analysisCache = new Map();
-const CACHE_TTL = 3600000; // 1 hour
-const CACHE_VERSION = 'v2'; // bump to invalidate cache
-
-async function getCacheKey(imageBase64, scenario, locationCity) {
-  // Use Web Crypto API (ES Module compatible)
-  const data = CACHE_VERSION + imageBase64.slice(0, 2000) + (scenario || '') + (locationCity || '');
-  const encoder = new TextEncoder();
-  const dataBuffer = encoder.encode(data);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', dataBuffer);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 16);
-}
-
 // Detect media type from base64 header bytes
 function getMediaTypeFromBase64(base64String) {
   if (base64String.startsWith('/9j/')) return 'image/jpeg';
@@ -39,265 +24,6 @@ function getMediaTypeFromBase64(base64String) {
   if (base64String.startsWith('R0lGOD')) return 'image/gif';
   if (base64String.startsWith('UklGR')) return 'image/webp';
   return 'image/jpeg'; // fallback
-}
-
-// Gemini image generation capabilities (VLM - understands images semantically)
-const GEMINI_CAPABILITIES = {
-  canDo: [
-    'Understand image content and context semantically',
-    'Transform atmosphere, lighting, and mood',
-    'Change color palettes and weather conditions',
-    'Add contextual environmental changes',
-    'Modify vegetation states (healthy ↔ stressed)',
-    'Add weather effects (rain, heat haze, clouds)',
-    'Preserve composition while transforming aesthetics'
-  ],
-  bestPractices: [
-    'Use conversational, descriptive prompts',
-    'Describe the desired end state, not step-by-step changes',
-    'Be specific about mood and atmosphere',
-    'Reference the original image context'
-  ]
-};
-
-// Scenario performance ratings (Gemini)
-const SCENARIO_PERFORMANCE = {
-  heatwave: '⭐⭐⭐⭐⭐ Excellent',
-  flood: '⭐⭐⭐⭐⭐ Excellent',
-  windstorm: '⭐⭐⭐⭐ Very Good',
-  adaptation: '⭐⭐⭐⭐⭐ Excellent'
-};
-
-// People elements for combinatorial variety (1000+ combinations per scenario)
-const peopleElements = {
-  heatwave: {
-    headwear: [
-      'wide-brimmed sun hat',
-      'baseball cap',
-      'light scarf over head',
-      'UV-protective visor',
-      'straw hat',
-      'bucket hat'
-    ],
-    clothing: [
-      'loose linen shirt',
-      'light cotton dress',
-      'sleeveless top',
-      'UV-protective long sleeves',
-      'light-colored loose clothing',
-      'breathable athletic wear'
-    ],
-    accessories: [
-      'carrying water bottle',
-      'holding portable fan',
-      'with sunglasses',
-      'carrying iced drink',
-      'with cooling towel around neck',
-      'holding parasol for shade'
-    ],
-    posture: [
-      'seeking shade under awning',
-      'fanning themselves',
-      'wiping forehead',
-      'standing in shadow',
-      'moving slowly',
-      'pausing to rest'
-    ]
-  },
-
-  flood: {
-    footwear: [
-      'rubber boots',
-      'waterproof wellies',
-      'rain galoshes',
-      'wrapped plastic bags over shoes',
-      'barefoot carrying shoes',
-      'hiking boots'
-    ],
-    clothing: [
-      'rain poncho',
-      'waterproof jacket with hood up',
-      'rolled-up trousers',
-      'raincoat',
-      'plastic rain cover',
-      'hooded windbreaker'
-    ],
-    accessories: [
-      'carrying umbrella',
-      'holding bags above water',
-      'with waterproof backpack',
-      'carrying belongings overhead',
-      'with plastic shopping bags',
-      'holding phone in plastic bag'
-    ],
-    posture: [
-      'stepping carefully around puddles',
-      'wading through shallow water',
-      'helping someone across',
-      'looking down at footing',
-      'jumping over puddle',
-      'standing on raised surface'
-    ]
-  },
-
-  windstorm: {
-    headwear: [
-      'holding onto hat',
-      'hood blown back',
-      'hair blown wildly',
-      'scarf wrapped tight',
-      'cap pulled low',
-      'no hat, hair streaming'
-    ],
-    clothing: [
-      'coat flapping open',
-      'jacket zipped tight',
-      'clothes pressed against body by wind',
-      'scarf flying horizontally',
-      'loose clothing billowing',
-      'buttoned-up overcoat'
-    ],
-    accessories: [
-      'gripping bag tightly',
-      'papers flying from hand',
-      'holding umbrella struggling',
-      'clutching belongings',
-      'bag pressed to chest',
-      'nothing loose visible'
-    ],
-    posture: [
-      'leaning into wind',
-      'bracing against gust',
-      'shielding face with arm',
-      'turned sideways to wind',
-      'hurrying with head down',
-      'gripping railing for support'
-    ]
-  },
-
-  adaptation: {
-    activity: [
-      'relaxing in outdoor seating',
-      'reading at shaded table',
-      'having coffee on terrace',
-      'chatting with neighbors',
-      'working on laptop outside',
-      'enjoying a meal outdoors'
-    ],
-    children: [
-      'children playing freely',
-      'kids doing homework outside',
-      'children on bikes',
-      'kids running on grass',
-      'children at play structure',
-      'kids with water toys'
-    ],
-    social: [
-      'neighbors gathered talking',
-      'group sharing picnic',
-      'friends at outdoor table',
-      'family barbecuing',
-      'community gardening together',
-      'people exercising in group'
-    ],
-    comfort: [
-      'looking relaxed and comfortable',
-      'wearing light casual clothing',
-      'enjoying shade of green infrastructure',
-      'moving at leisure pace',
-      'sitting contentedly',
-      'smiling in conversation'
-    ]
-  }
-};
-
-// Build people instruction by combining 2-3 random elements
-function buildPeopleInstruction(scenario) {
-  const elements = peopleElements[scenario];
-  if (!elements) return '';
-
-  const categories = Object.keys(elements);
-
-  // Select 2-3 categories randomly
-  const numCategories = Math.random() > 0.5 ? 3 : 2;
-  const shuffled = categories.sort(() => 0.5 - Math.random());
-  const selected = shuffled.slice(0, numCategories);
-
-  // Take one random element from each category
-  const parts = selected.map(cat => {
-    const options = elements[cat];
-    return options[Math.floor(Math.random() * options.length)];
-  });
-
-  // Combine into natural sentence
-  if (scenario === 'adaptation') {
-    return `People appear ${parts.join(', ')}`;
-  } else {
-    return `People are ${parts.join(', ')}`;
-  }
-}
-
-// Intensity levels per scenario for image generation variety
-const intensityLevels = {
-  heatwave: {
-    intense: { sky: 'harsh orange with visible heat shimmer', vegetation: 'completely dead and brown', surfaces: 'cracked and dusty' },
-    moderate: { sky: 'yellowish and hazy', vegetation: 'stressed and browning', surfaces: 'dry and faded' },
-    mild: { sky: 'washed out with harsh light', vegetation: 'wilting and dry', surfaces: 'sun-bleached' }
-  },
-  flood: {
-    intense: { sky: 'dark heavy grey with low clouds', water: 'large muddy puddles collecting everywhere', surfaces: 'dark wet and waterlogged' },
-    moderate: { sky: 'flat grey and overcast', water: 'standing water in low areas', surfaces: 'wet and reflective' },
-    mild: { sky: 'grey and muted', water: 'damp with some puddles', surfaces: 'recently rained on' }
-  },
-  windstorm: {
-    intense: { sky: 'dark dramatic with ominous storm clouds', mood: 'threatening and turbulent', light: 'harsh and directional' },
-    moderate: { sky: 'grey with fast-moving clouds', mood: 'unsettled and tense', light: 'diffused and moody' },
-    mild: { sky: 'overcast with dynamic clouds', mood: 'pre-storm stillness', light: 'flat and grey' }
-  },
-  adaptation: {
-    vibrant: { vegetation: 'lush and deeply green', sky: 'clear bright blue', mood: 'beautiful and inviting' },
-    pleasant: { vegetation: 'healthy and green', sky: 'pleasant with soft clouds', mood: 'comfortable and welcoming' },
-    subtle: { vegetation: 'fresh and well-maintained', sky: 'clear and calm', mood: 'peaceful and improved' }
-  }
-};
-
-// Build Gemini image prompt programmatically with varied intensity
-function buildGeminiPrompt(scenario) {
-  // Select random intensity level
-  const levels = Object.keys(intensityLevels[scenario] || {});
-  if (levels.length === 0) return null;
-
-  const randomLevel = levels[Math.floor(Math.random() * levels.length)];
-  const intensity = intensityLevels[scenario][randomLevel];
-
-  // Build combinatorial people instruction (1000+ combinations)
-  const peopleInstruction = buildPeopleInstruction(scenario);
-  const peopleText = peopleInstruction ? `Any people visible in the image: ${peopleInstruction}.` : '';
-
-  let prompt = '';
-
-  switch(scenario) {
-    case 'heatwave':
-      prompt = `Edit this image to show an extreme heatwave scenario. The sky should be ${intensity.sky}. All grass, plants and vegetation should appear ${intensity.vegetation}. Ground and surfaces look ${intensity.surfaces}. ${peopleText} Maintain the exact same composition, architecture, and camera angle.`;
-      break;
-
-    case 'flood':
-      prompt = `Edit this image to show the aftermath of heavy rainfall and flooding. The sky is ${intensity.sky}. ${intensity.water}. All surfaces are ${intensity.surfaces}. ${peopleText} Maintain the exact same composition, architecture, and camera angle.`;
-      break;
-
-    case 'windstorm':
-      prompt = `Edit this image to show an approaching severe windstorm. The sky is ${intensity.sky}. The atmosphere feels ${intensity.mood}. Lighting is ${intensity.light}. ${peopleText} Maintain the exact same composition, architecture, and camera angle.`;
-      break;
-
-    case 'adaptation':
-      prompt = `Edit this image to show successful climate adaptation - a POSITIVE future. Vegetation is ${intensity.vegetation} and thriving. The sky is ${intensity.sky}. The overall atmosphere is ${intensity.mood}. ${peopleText} Do NOT add any orange tones, haze, or signs of stress. Maintain the exact same composition, architecture, and camera angle.`;
-      break;
-
-    default:
-      return null;
-  }
-
-  return { prompt, intensity: randomLevel, peopleInstruction };
 }
 
 // Fiction registers with varied examples per scenario
@@ -395,112 +121,28 @@ const fictionRegisters = {
   ]
 };
 
-// Get random fiction starting point for Claude to expand
-function getRandomFiction(scenario) {
+// Get random fiction register for Claude to use
+function getRandomRegister(scenario) {
   const registers = fictionRegisters[scenario];
   if (!registers) return null;
 
   const randomRegister = registers[Math.floor(Math.random() * registers.length)];
-  const randomExample = randomRegister.examples[Math.floor(Math.random() * randomRegister.examples.length)];
-
-  return { type: randomRegister.type, text: randomExample };
-}
-
-// Validate image prompt (lighter validation for Gemini)
-function validateImagePrompt(prompt) {
-  const issues = [];
-
-  const wordCount = prompt.split(/\s+/).length;
-  if (wordCount > 100) {
-    issues.push(`Prompt too long: ${wordCount} words (max 100)`);
-  }
-
-  if (wordCount < 10) {
-    issues.push(`Prompt too short: ${wordCount} words (min 10)`);
-  }
-
-  return { valid: issues.length === 0, issues };
+  return { type: randomRegister.type };
 }
 
 // Build location context for hyper-local predictions
 function buildLocationContext(location) {
   if (!location || !location.city) return '';
 
-  return `
-## LOCATION CONTEXT: ${location.city}${location.country ? `, ${location.country}` : ''}
-
-Make the fiction hyper-local to this place:
-- Reference the specific city/region by name in the FICTION
-- Include plausible local climate predictions:
-  * Coastal cities: mention sea level rise, storm surge, salt air corrosion
-  * Mediterranean cities (Madrid, Barcelona, Rome): mention drought, heat waves, water restrictions
-  * River cities: mention flood risk, drainage infrastructure
-  * Northern cities: mention changing seasons, new weather patterns
-- Mention local landmarks, street names, or cultural elements if recognizable
-- The dispatch should feel like it was written BY someone from this place
-`;
+  return `The design is located in ${location.city}${location.country ? `, ${location.country}` : ''}. Reference this place specifically—mention the city by name, use local context.`;
 }
 
-// Scenario-specific instructions (for Claude fiction generation)
-const scenarioInstructions = {
-
-  heatwave: `
-## HEATWAVE — Extreme heat, mundane tone
-
-FICTION REGISTER (the system has selected one for you):
-- Minor inconvenience: "The AC's been running nonstop since Tuesday"
-- Normalized routine: "Third siesta hour this week"
-- Bureaucratic normal: "Heat protocol level 2 means the terrace closes at 2pm"
-- Latent tension: "Nobody mentions the water bill anymore"
-
-Your task: Expand on the provided starting point. Add specific details (temperatures, times, small observations). Keep the same register—don't escalate to crisis.
-`,
-
-  flood: `
-## FLOOD — Post-rain aftermath, mundane tone
-
-FICTION REGISTER (the system has selected one for you):
-- Minor inconvenience: "The drainage couldn't keep up again"
-- Normalized routine: "Third time this month we've had to mop the lobby"
-- Bureaucratic normal: "Street-level parking suspended until further notice"
-- Latent tension: "Insurance stopped covering ground floors last year"
-
-Your task: Expand on the provided starting point. Add specific details (water levels, cleanup, community response). Keep the same register—don't escalate to disaster.
-`,
-
-  windstorm: `
-## WINDSTORM — Approaching storm or aftermath, mundane tone
-
-FICTION REGISTER (the system has selected one for you):
-- Minor inconvenience: "Had to cancel the outdoor meeting again"
-- Normalized routine: "The storm warning app has become part of morning coffee"
-- Bureaucratic normal: "Wind advisory means the scaffolding comes down by 3pm"
-- Latent tension: "The old oak out front has a lean nobody wants to talk about"
-
-Your task: Expand on the provided starting point. Add specific details (wind speeds, preparations, small disruptions). Keep the same register—don't escalate to destruction.
-`,
-
-  adaptation: `
-## ADAPTATION — Successful climate adaptation, POSITIVE tone only
-
-FICTION REGISTER (the system has selected one for you):
-- Successful adaptation: "The retrofit finally pays off—five degrees cooler"
-- Community win: "The building committee got something right for once"
-- Normalized improvement: "Kids do homework on the terrace now"
-- Quiet satisfaction: "Worth every euro of the renovation"
-
-Your task: Expand on the provided starting point. Add specific details (improvements, comfort, satisfaction). Keep it POSITIVE—no crisis, no alerts, no problems.
-
-⚠️ NEVER use: orange, haze, brown, dead, harsh, crisis, emergency, restrictions
-`
-};
-
-// Final check suffix for system prompt
-const scenarioSuffix = {
-  heatwave: `\n\n🔴 FINAL CHECK: Heatwave = orange sky + dead vegetation + heat details in fiction.`,
-  flood: `\n\n🔴 FINAL CHECK: Flood = grey sky + wet surfaces + post-rain mundane fiction.`,
-  windstorm: `\n\n🔴 FINAL CHECK: Windstorm = dramatic dark sky + ominous + storm aftermath fiction.`,
-  adaptation: ``
+// Scenario descriptions for Claude
+const scenarioDescriptions = {
+  heatwave: 'extreme heat scenario - notice the sky color, vegetation state, any signs of heat stress',
+  flood: 'post-rainfall/flood scenario - notice the grey sky, wet surfaces, puddles, people with rain gear',
+  windstorm: 'windstorm scenario - notice the dramatic sky, wind effects, people bracing against wind',
+  adaptation: 'successful climate adaptation - notice the lush green vegetation, comfortable atmosphere, people enjoying the space'
 };
 
 export default async function handler(req, res) {
@@ -515,122 +157,108 @@ export default async function handler(req, res) {
   const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
   if (!ANTHROPIC_API_KEY) return res.status(500).json({ error: "API key not set" });
 
-  // Extract scenario and location from request
-  const scenario = req.body.scenario || 'heatwave';
-  const location = req.body.location || null;
+  // Extract parameters - NEW: now receives generatedImage
+  const { scenario, location, generatedImage, generatedImageMimeType } = req.body;
+  const originalImageData = req.body.messages?.[0]?.content?.find(b => b.type === 'image')?.source?.data || '';
+  const originalImageMimeType = req.body.messages?.[0]?.content?.find(b => b.type === 'image')?.source?.media_type || 'image/jpeg';
 
-  // Debug logging for scenario investigation
-  console.log('=== SCENARIO DEBUG ===');
-  console.log('Scenario received:', scenario);
-  console.log('Has instructions:', !!scenarioInstructions[scenario]);
-  if (scenario === 'adaptation') {
-    console.log('Adaptation instructions preview:', scenarioInstructions.adaptation?.substring(0, 300));
+  // Validate required fields
+  if (!scenario) {
+    return res.status(400).json({ error: "Scenario is required" });
   }
-  console.log('========================');
 
-  // NOTE: Cache disabled to ensure variety in outputs
-  // Each request gets fresh intensity + fiction register combinations
+  if (!generatedImage) {
+    return res.status(400).json({ error: "Generated image is required" });
+  }
 
+  console.log('=== FICTION GENERATION ===');
+  console.log('Scenario:', scenario);
+  console.log('Has generated image:', !!generatedImage);
+  console.log('Has original image:', !!originalImageData);
+  console.log('Location:', location ? `${location.city}, ${location.country}` : 'Not detected');
+  console.log('==========================');
+
+  // Get random register for variety
+  const registerData = getRandomRegister(scenario);
+  const register = registerData?.type?.replace(/_/g, ' ') || 'mundane observation';
+
+  // Build location context
   const locationContext = buildLocationContext(location);
-  const scenarioGuide = scenarioInstructions[scenario] || scenarioInstructions.heatwave;
 
-  // Generate image prompt programmatically (not by Claude)
-  const geminiPromptData = buildGeminiPrompt(scenario);
-  const generatedImagePrompt = geminiPromptData?.prompt || '';
-
-  // Get random fiction starting point for Claude to expand
-  const fictionData = getRandomFiction(scenario);
-  const fictionStartingPoint = fictionData?.text || '';
-  const fictionRegister = fictionData?.type?.replace(/_/g, ' ') || '';
-
-  const systemPrompt = `You are a climate design fiction specialist for Heated Studio. Your ONLY task is to write a short fiction dispatch.
-
-## CORE PHILOSOPHY
-- MUNDANE, NOT APOCALYPTIC: Show "a grey Tuesday in November", not catastrophe
-- HYPER-LOCAL: People relate to their zip code. Make it feel specific, not generic
-- TIME HORIZON: Set fictions between 2030-2032 (optimal) or max 2036. Near enough to feel real.
-
-## EMOTIONAL REGISTER & VOICE
-Vary the narrative voice. Not always omniscient third person:
-- Casual neighbor observation
-- Someone's mental note while passing
-- Overheard conversation fragment
-- Detail noticed from the corner of an eye
-- Fact accepted without comment
-
-The tone should feel like texture of adapted life, not headlines.
-
-## PROHIBITED WORDS
-Never use: apocalyptic, devastating, catastrophic, scorching, desperate, flee, collapse, disaster, doom, crisis, emergency (unless naming an official protocol)
-
-${scenarioGuide}
-${locationContext}
+  // Build system prompt - Claude sees the generated image and writes fiction about it
+  const systemPrompt = `You are a climate fiction writer for Heated Studio. You write short "dispatches from the future" - 2-3 sentence observations that feel like texture of adapted life.
 
 ## YOUR TASK
-You are given a STARTING POINT for a fiction dispatch. Expand it into 2-3 sentences while:
-- Keeping the same emotional register (${fictionRegister})
-- Adding specific details (times, temperatures, names, measurements)
-- Making it feel hyper-local if location is provided
-- Staying mundane, not escalating to crisis
+You will see TWO images:
+1. ORIGINAL: The design as it was rendered today
+2. GENERATED: The same design transformed to show a ${scenarioDescriptions[scenario] || scenario}
 
-## OUTPUT FORMAT (follow exactly)
-FICTION: [Your 2-3 sentence expansion. English only. Keep the register: ${fictionRegister}]
+Write a 2-3 sentence fiction dispatch that describes what you SEE in the GENERATED image. This is critical: your fiction must match what is actually visible.
 
-## STARTING POINT TO EXPAND
-"${fictionStartingPoint}"` + (scenarioSuffix[scenario] || '');
+## REGISTER
+Write in this register: ${register}
+- minor inconvenience: Small daily friction, accepted with a shrug
+- normalized routine: This is just how things are done now
+- bureaucratic normal: Protocols, schedules, official adjustments
+- latent tension: Unspoken worry beneath the surface
+- successful adaptation: Things work better now
+- community win: People came together and it paid off
+- quiet satisfaction: Simple contentment with improvements
+
+## RULES
+1. DESCRIBE WHAT YOU SEE: If the sky is orange, mention heat. If people have umbrellas, mention rain. Match the visual.
+2. MUNDANE, NOT APOCALYPTIC: "A Tuesday in August" not "the world is ending"
+3. SPECIFIC DETAILS: Temperatures, times, names, measurements
+4. 2-3 SENTENCES ONLY: Tight, observational, like a passing thought
+5. ENGLISH ONLY: Always write in English regardless of location
+
+## PROHIBITED WORDS
+Never use: apocalyptic, devastating, catastrophic, scorching, desperate, flee, collapse, disaster, doom, crisis, emergency
+
+${locationContext}
+
+## OUTPUT FORMAT
+Output ONLY the fiction text, nothing else. No "FICTION:" prefix, no explanations. Just 2-3 sentences.`;
 
   try {
-    // Simplified user message - Claude only needs to write fiction now
-    const userInstruction = `Look at this image. Write a climate fiction dispatch for the ${scenario} scenario.
+    // Build messages with BOTH images
+    const messages = [{
+      role: 'user',
+      content: [
+        { type: 'text', text: 'ORIGINAL IMAGE (the design today):' },
+        {
+          type: 'image',
+          source: {
+            type: 'base64',
+            media_type: getMediaTypeFromBase64(originalImageData) || originalImageMimeType,
+            data: originalImageData
+          }
+        },
+        { type: 'text', text: `GENERATED IMAGE (${scenario} scenario - write fiction about what you see here):` },
+        {
+          type: 'image',
+          source: {
+            type: 'base64',
+            media_type: generatedImageMimeType || getMediaTypeFromBase64(generatedImage) || 'image/png',
+            data: generatedImage
+          }
+        },
+        { type: 'text', text: `Write a ${register} fiction dispatch (2-3 sentences) describing what you see in the GENERATED image. Match the visual - if the vegetation is brown, mention heat; if surfaces are wet, mention rain. Output only the fiction text.` }
+      ]
+    }];
 
-Starting point to expand: "${fictionStartingPoint}"
-Register to maintain: ${fictionRegister}
-
-Output only FICTION: followed by your 2-3 sentence dispatch.`;
-
-    // Fix media types in image content blocks AND replace text with simplified instruction
-    const messages = (req.body.messages || []).map(msg => ({
-      ...msg,
-      content: (msg.content || []).map(block => {
-        if (block.type === 'image' && block.source?.type === 'base64' && block.source?.data) {
-          const detectedType = getMediaTypeFromBase64(block.source.data);
-          return {
-            ...block,
-            source: {
-              ...block.source,
-              media_type: detectedType
-            }
-          };
-        }
-        // Replace user text with simplified instruction
-        if (block.type === 'text') {
-          return {
-            ...block,
-            text: userInstruction
-          };
-        }
-        return block;
-      })
-    }));
-
-    // Only pass valid Anthropic API fields (exclude scenario, location)
-    const { model, max_tokens } = req.body;
     const requestBody = {
-      model,
-      max_tokens,
+      model: req.body.model || 'claude-sonnet-4-5-20250929',
+      max_tokens: 300,
       messages,
       system: systemPrompt
     };
 
-    // Debug: Log prompt generation
-    console.log('=== PROMPT GENERATION ===');
-    console.log('Scenario:', scenario);
-    console.log('Image intensity:', geminiPromptData?.intensity || 'N/A');
-    console.log('People instruction:', geminiPromptData?.peopleInstruction || 'None');
-    console.log('Fiction register:', fictionRegister);
-    console.log('Fiction starting point:', fictionStartingPoint);
-    console.log('Generated IMG prompt:', generatedImagePrompt.substring(0, 150) + '...');
-    console.log('=========================');
+    console.log('=== CLAUDE REQUEST ===');
+    console.log('Model:', requestBody.model);
+    console.log('Register:', register);
+    console.log('Sending both images to Claude...');
+    console.log('======================');
 
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
@@ -643,40 +271,32 @@ Output only FICTION: followed by your 2-3 sentence dispatch.`;
     });
     const data = await response.json();
 
-    // Combine programmatic IMG prompt with Claude's fiction response
+    // Extract fiction from response
     if (data.content && data.content[0]?.text) {
-      const claudeText = data.content[0].text;
+      const fiction = data.content[0].text.trim();
 
-      // Extract fiction from Claude's response
-      const fictionMatch = claudeText.match(/FICTION:\s*(.+)/is);
-      const fiction = fictionMatch ? fictionMatch[1].trim() : claudeText.trim();
+      console.log('=== FICTION OUTPUT ===');
+      console.log('Register used:', register);
+      console.log('Fiction:', fiction.substring(0, 200));
+      console.log('======================');
 
-      // Combine into expected format for frontend
-      const combinedResponse = `IMG: ${generatedImagePrompt}\n\nFICTION: ${fiction}`;
-
-      // Replace Claude's response with combined format
-      data.content[0].text = combinedResponse;
-
-      // Debug logging
-      const imgPrompt = generatedImagePrompt;
-      const wordCount = imgPrompt.split(/\s+/).length;
-      const validation = validateImagePrompt(imgPrompt);
-
-      console.log('=== HEATED ANALYSIS ===');
-      console.log('Scenario:', scenario);
-      console.log('Expected performance:', SCENARIO_PERFORMANCE[scenario] || 'Unknown');
-      console.log('Location:', location ? `${location.city}, ${location.country}` : 'Not detected');
-      console.log('IMG Prompt Word Count:', wordCount);
-      console.log('Validation:', validation.valid ? '✓ Valid' : `✗ Issues: ${validation.issues.join(', ')}`);
-      console.log('Intensity level:', geminiPromptData?.intensity || 'N/A');
-      console.log('People in prompt:', imgPrompt.toLowerCase().includes('people') || imgPrompt.toLowerCase().includes('any people') ? '✓ Yes' : '✗ No');
-      console.log('Fiction register:', fictionRegister);
-      console.log('Claude fiction preview:', fiction.substring(0, 150));
-      console.log('=======================');
+      // Return in expected format for frontend
+      return res.status(200).json({
+        success: true,
+        fiction: fiction,
+        register: register,
+        content: [{ text: `FICTION: ${fiction}` }] // Backward compatible format
+      });
     }
 
-    // NOTE: Cache disabled to ensure variety in outputs
-    res.status(200).json(data);
+    // Handle error response from Claude
+    if (data.error) {
+      console.error('Claude API error:', data.error);
+      return res.status(500).json({ error: data.error.message || 'Claude API error' });
+    }
+
+    return res.status(500).json({ error: 'No fiction generated' });
+
   } catch (err) {
     console.error('Analyze API error:', err);
     res.status(500).json({ error: "API request failed" });

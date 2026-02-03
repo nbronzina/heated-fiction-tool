@@ -536,70 +536,102 @@
     async function runFiction() {
       if (!imageBase64 || !selectedScenario) return;
       goStep(3);
-      setLoading("Reading your design...");
+
       try {
-        setLoading("Imagining the future...");
-        // Build prompt with location context if available
-        let userPrompt = selectedScenario.prompt;
-        if (locationData && locationData.city) {
-          userPrompt += `\n\nLOCATION CONTEXT: This design is located in ${locationData.city}, ${locationData.country}${locationData.state ? ", " + locationData.state : ""}. Make the fiction specific to this place.`;
+        // STEP 1: Build image prompt programmatically
+        setLoading("Preparing transformation...");
+        const promptRes = await fetch("/api/build-image-prompt", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            scenario: selectedScenario.label.toLowerCase()
+          })
+        });
+        const promptData = await promptRes.json();
+        if (!promptData.success) throw new Error(promptData.error || "Failed to build prompt");
+
+        const imgPrompt = promptData.prompt;
+        console.log("IMG PROMPT:", imgPrompt);
+        console.log("Intensity:", promptData.intensity);
+        console.log("People:", promptData.peopleInstruction);
+        generatedPrompt = imgPrompt;
+
+        // Show results screen with shimmer
+        renderResults();
+        goStep(4);
+
+        // STEP 2: Generate image with Gemini
+        setLoading("Generating the image...");
+        const imgRes = await fetch("/api/generate-image-gemini", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            prompt: imgPrompt,
+            imageBase64: imageBase64,
+            mimeType: imageMediaType
+          })
+        });
+        const imgData = await imgRes.json();
+        console.log("Gemini response:", imgData.success ? "success" : imgData.error);
+
+        if (!imgData.success || !imgData.imageBase64) {
+          console.error("Gemini error:", imgData.error || "No image returned");
+          showGenError();
+          return;
         }
 
-        const res = await fetch("/api/analyze", {
+        // Show generated image immediately
+        const generatedImageBase64 = imgData.imageBase64;
+        const generatedImageMimeType = imgData.mimeType || 'image/png';
+        const dataUrl = `data:${generatedImageMimeType};base64,${generatedImageBase64}`;
+        document.getElementById("gen-shimmer").style.display = "none";
+        const img = document.getElementById("result-generated");
+        img.src = dataUrl;
+        img.style.display = "block";
+        document.getElementById("watermark").style.display = "block";
+
+        // STEP 3: Generate fiction based on the GENERATED image
+        setLoading("Writing the dispatch...");
+        const fictionRes = await fetch("/api/analyze", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             model: "claude-sonnet-4-5-20250929",
-            max_tokens: 1000,
+            max_tokens: 300,
             scenario: selectedScenario.label.toLowerCase(),
             location: locationData,
+            generatedImage: generatedImageBase64,
+            generatedImageMimeType: generatedImageMimeType,
             messages: [{ role: "user", content: [
               { type: "image", source: { type: "base64", media_type: imageMediaType, data: imageBase64 } },
-              { type: "text", text: userPrompt }
+              { type: "text", text: "Generate fiction" }
             ]}]
           })
-        })
-        const data = await res.json();
-        if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
-        const text = (data.content || []).map(i => i.text || "").join("\n");
-        const imgMatch = text.match(/IMG:\s*\n?([\s\S]*?)(?=FICTION:|$)/i);
-        let imgPrompt = imgMatch ? imgMatch[1].trim() : "";
-        imgPrompt = imgPrompt.replace(/\*+/g, '').trim();
-        console.log("IMG PROMPT:", imgPrompt);
-        generatedPrompt = imgPrompt;
+        });
 
-        // Parse FICTION text
-        const fictionMatch = text.match(/FICTION:\s*\n?([\s\S]*?)$/i);
-        generatedFiction = fictionMatch ? fictionMatch[1].trim().replace(/\*+/g, '') : "";
-        console.log("FICTION:", generatedFiction);
-        renderResults();
-        goStep(4);
-        if (imgPrompt) {
-          setLoading("Generating the image...");
-          try {
-            const imgRes = await fetch("/api/generate-image-gemini", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                prompt: imgPrompt,
-                imageBase64: imageBase64,
-                mimeType: imageMediaType
-              })
-            });
-            const imgData = await imgRes.json();
-            console.log("Gemini response:", imgData.success ? "success" : imgData.error);
-            if (imgData.success && imgData.imageBase64) {
-              const dataUrl = `data:${imgData.mimeType || 'image/png'};base64,${imgData.imageBase64}`;
-              showGeneratedImage(dataUrl);
-            } else {
-              console.error("Gemini error:", imgData.error || "No image returned");
-              showGenError();
-            }
-          } catch(e) {
-            console.error("Image gen failed:", e);
-            showGenError();
-          }
+        const fictionData = await fictionRes.json();
+        if (fictionData.error) {
+          console.error("Fiction error:", fictionData.error);
+          // Show image without fiction
+          return;
         }
+
+        // Extract fiction from response
+        generatedFiction = fictionData.fiction || "";
+        if (!generatedFiction && fictionData.content) {
+          const text = fictionData.content.map(i => i.text || "").join("\n");
+          const fictionMatch = text.match(/FICTION:\s*\n?([\s\S]*?)$/i);
+          generatedFiction = fictionMatch ? fictionMatch[1].trim().replace(/\*+/g, '') : text.trim();
+        }
+        console.log("FICTION:", generatedFiction);
+
+        // Show fiction
+        if (generatedFiction) {
+          document.getElementById("fiction-text").textContent = generatedFiction;
+          document.getElementById("fiction-location").textContent = locationData ? locationData.city + ", " + locationData.country : selectedScenario.location;
+          document.getElementById("fiction-container").style.display = "block";
+        }
+
       } catch(err) {
         console.error(err);
         document.getElementById("error-msg").textContent = "Something went wrong: " + err.message;
@@ -638,64 +670,91 @@
       document.getElementById("fiction-container").style.display = "none";
 
       try {
-        // Build prompt with location context if available
-        let userPrompt = selectedScenario.prompt;
-        if (locationData && locationData.city) {
-          userPrompt += `\n\nLOCATION CONTEXT: This design is located in ${locationData.city}, ${locationData.country}${locationData.state ? ", " + locationData.state : ""}. Make the fiction specific to this place.`;
+        // STEP 1: Build new image prompt (new random intensity/people)
+        const promptRes = await fetch("/api/build-image-prompt", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            scenario: selectedScenario.label.toLowerCase()
+          })
+        });
+        const promptData = await promptRes.json();
+        if (!promptData.success) throw new Error(promptData.error || "Failed to build prompt");
+
+        const imgPrompt = promptData.prompt;
+        console.log("RETRY - IMG PROMPT:", imgPrompt);
+        console.log("RETRY - Intensity:", promptData.intensity);
+        generatedPrompt = imgPrompt;
+
+        // STEP 2: Generate image with Gemini
+        const imgRes = await fetch("/api/generate-image-gemini", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            prompt: imgPrompt,
+            imageBase64: imageBase64,
+            mimeType: imageMediaType
+          })
+        });
+        const imgData = await imgRes.json();
+        console.log("Retry Gemini response:", imgData.success ? "success" : imgData.error);
+
+        if (!imgData.success || !imgData.imageBase64) {
+          console.error("Retry Gemini error:", imgData.error || "No image returned");
+          showGenError();
+          return;
         }
 
-        // Get new analysis (new random intensity/people/register)
-        const res = await fetch("/api/analyze", {
+        // Show generated image
+        const generatedImageBase64 = imgData.imageBase64;
+        const generatedImageMimeType = imgData.mimeType || 'image/png';
+        const dataUrl = `data:${generatedImageMimeType};base64,${generatedImageBase64}`;
+        document.getElementById("gen-shimmer").style.display = "none";
+        const img = document.getElementById("result-generated");
+        img.src = dataUrl;
+        img.style.display = "block";
+        document.getElementById("watermark").style.display = "block";
+
+        // STEP 3: Generate fiction based on the GENERATED image
+        const fictionRes = await fetch("/api/analyze", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             model: "claude-sonnet-4-5-20250929",
-            max_tokens: 1000,
+            max_tokens: 300,
             scenario: selectedScenario.label.toLowerCase(),
             location: locationData,
+            generatedImage: generatedImageBase64,
+            generatedImageMimeType: generatedImageMimeType,
             messages: [{ role: "user", content: [
               { type: "image", source: { type: "base64", media_type: imageMediaType, data: imageBase64 } },
-              { type: "text", text: userPrompt }
+              { type: "text", text: "Generate fiction" }
             ]}]
           })
         });
 
-        const data = await res.json();
-        if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
+        const fictionData = await fictionRes.json();
+        if (fictionData.error) {
+          console.error("Fiction error:", fictionData.error);
+          return;
+        }
 
-        const text = (data.content || []).map(i => i.text || "").join("\n");
-        const imgMatch = text.match(/IMG:\s*\n?([\s\S]*?)(?=FICTION:|$)/i);
-        let imgPrompt = imgMatch ? imgMatch[1].trim() : "";
-        imgPrompt = imgPrompt.replace(/\*+/g, '').trim();
-        console.log("RETRY - IMG PROMPT:", imgPrompt);
-        generatedPrompt = imgPrompt;
-
-        // Parse FICTION text
-        const fictionMatch = text.match(/FICTION:\s*\n?([\s\S]*?)$/i);
-        generatedFiction = fictionMatch ? fictionMatch[1].trim().replace(/\*+/g, '') : "";
+        // Extract fiction
+        generatedFiction = fictionData.fiction || "";
+        if (!generatedFiction && fictionData.content) {
+          const text = fictionData.content.map(i => i.text || "").join("\n");
+          const fictionMatch = text.match(/FICTION:\s*\n?([\s\S]*?)$/i);
+          generatedFiction = fictionMatch ? fictionMatch[1].trim().replace(/\*+/g, '') : text.trim();
+        }
         console.log("RETRY - FICTION:", generatedFiction);
 
-        // Generate image with new prompt
-        if (imgPrompt) {
-          const imgRes = await fetch("/api/generate-image-gemini", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              prompt: imgPrompt,
-              imageBase64: imageBase64,
-              mimeType: imageMediaType
-            })
-          });
-          const imgData = await imgRes.json();
-          console.log("Retry Gemini response:", imgData.success ? "success" : imgData.error);
-          if (imgData.success && imgData.imageBase64) {
-            const dataUrl = `data:${imgData.mimeType || 'image/png'};base64,${imgData.imageBase64}`;
-            showGeneratedImage(dataUrl);
-          } else {
-            console.error("Retry Gemini error:", imgData.error || "No image returned");
-            showGenError();
-          }
+        // Show fiction
+        if (generatedFiction) {
+          document.getElementById("fiction-text").textContent = generatedFiction;
+          document.getElementById("fiction-location").textContent = locationData ? locationData.city + ", " + locationData.country : selectedScenario.location;
+          document.getElementById("fiction-container").style.display = "block";
         }
+
       } catch(e) {
         console.error("Retry failed:", e);
         showGenError();
@@ -711,15 +770,11 @@
 
     function showGeneratedImage(blobUrl) {
       document.getElementById("gen-shimmer").style.display = "none";
-      const img = document.getElementById("result-generated"); img.src = blobUrl; img.style.display = "block";
+      const img = document.getElementById("result-generated");
+      img.src = blobUrl;
+      img.style.display = "block";
       document.getElementById("watermark").style.display = "block";
-
-      // Show FICTION text
-      if (generatedFiction) {
-        document.getElementById("fiction-text").textContent = generatedFiction;
-        document.getElementById("fiction-location").textContent = locationData ? locationData.city + ", " + locationData.country : selectedScenario.location;
-        document.getElementById("fiction-container").style.display = "block";
-      }
+      // NOTE: Fiction is now generated AFTER image and displayed separately
     }
 
     async function downloadImage() {
