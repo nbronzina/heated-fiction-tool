@@ -225,8 +225,11 @@ Remember: You are creating design fiction artifacts, not disaster porn. The goal
       })
     }));
 
+    // Only pass valid Anthropic API fields (exclude scenario, location)
+    const { model, max_tokens } = req.body;
     const requestBody = {
-      ...req.body,
+      model,
+      max_tokens,
       messages,
       system: systemPrompt
     };
