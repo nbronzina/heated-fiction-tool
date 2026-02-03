@@ -243,12 +243,35 @@
     }
 
     function resetAll() {
-      selectedScenario = null; uploadedDataUrl = null; imageBase64 = null; generatedPrompt = "";
+      // Clear state variables
+      selectedScenario = null;
+      uploadedDataUrl = null;
+      imageBase64 = null;
+      imageMediaType = "image/jpeg";
+      generatedPrompt = "";
+
+      // Clear file input
+      document.getElementById("file-input").value = "";
+
+      // Reset upload zone
       document.getElementById("upload-placeholder").style.display = "block";
       document.getElementById("upload-preview").style.display = "none";
+      document.getElementById("preview-img").src = "";
       document.getElementById("upload-zone").classList.remove("has-image");
       document.getElementById("error-msg").style.display = "none";
-      const b = document.getElementById("generate-btn"); b.disabled = true; b.style.background = "#3d342f"; b.style.color = "#6b6058";
+
+      // Reset generate button
+      const b = document.getElementById("generate-btn");
+      b.disabled = true;
+      b.style.background = "#3d342f";
+      b.style.color = "#6b6058";
+
+      // Clear result images
+      document.getElementById("result-original").src = "";
+      document.getElementById("result-generated").src = "";
+      document.getElementById("result-generated").style.display = "none";
+      document.getElementById("gen-shimmer").style.display = "none";
+
       goStep(0);
     }
 
@@ -324,6 +347,7 @@
         const text = (data.content || []).map(i => i.text || "").join("\n");
         const imgMatch = text.match(/IMG:\s*\n?([\s\S]*?)(?=FICTION:|$)/i);
         const imgPrompt = imgMatch ? imgMatch[1].trim() : "";
+        console.log("IMG PROMPT:", imgPrompt);
         generatedPrompt = imgPrompt;
         renderResults();
         goStep(4);
