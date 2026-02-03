@@ -504,15 +504,41 @@
       document.getElementById("watermark").style.display = "block";
     }
 
-    function downloadImage() {
+    async function downloadImage() {
       const img = document.getElementById("result-generated");
       if (!img.src) return;
-      const link = document.createElement("a");
-      link.href = img.src;
-      link.download = "heated-fiction-" + Date.now() + ".jpg";
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+
+      const btn = event.target;
+      const originalText = btn.textContent;
+      btn.textContent = "Downloading...";
+      btn.disabled = true;
+
+      try {
+        // Fetch image as blob to bypass CORS
+        const response = await fetch(img.src);
+        const blob = await response.blob();
+
+        // Create local blob URL
+        const blobUrl = URL.createObjectURL(blob);
+
+        // Download
+        const link = document.createElement("a");
+        link.href = blobUrl;
+        link.download = "heated-fiction-" + Date.now() + ".jpg";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        // Clean up blob URL
+        URL.revokeObjectURL(blobUrl);
+      } catch (err) {
+        console.error("Download failed:", err);
+        // Fallback: open in new tab
+        window.open(img.src, "_blank");
+      } finally {
+        btn.textContent = originalText;
+        btn.disabled = false;
+      }
     }
 
   </script>
