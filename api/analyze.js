@@ -41,80 +41,44 @@ function getMediaTypeFromBase64(base64String) {
   return 'image/jpeg'; // fallback
 }
 
-// Documented FLUX Kontext capabilities and limitations
-const FLUX_LIMITATIONS = {
+// Gemini image generation capabilities (VLM - understands images semantically)
+const GEMINI_CAPABILITIES = {
   canDo: [
-    'Change sky/atmosphere dramatically',
-    'Shift color palette globally (green → brown, or enhance greens)',
-    'Add weather effects (haze, overcast, dramatic clouds)',
-    'Darken/lighten surfaces',
-    'Add puddles on flat simple surfaces',
-    'Change lighting direction and mood',
-    'Preserve composition and framing'
+    'Understand image content and context semantically',
+    'Transform atmosphere, lighting, and mood',
+    'Change color palettes and weather conditions',
+    'Add contextual environmental changes',
+    'Modify vegetation states (healthy ↔ stressed)',
+    'Add weather effects (rain, heat haze, clouds)',
+    'Preserve composition while transforming aesthetics'
   ],
-  cannotDo: [
-    'Add complex objects (debris, fallen branches)',
-    'Deform geometry (bend trees, lean structures)',
-    'Create motion blur or active weather',
-    'Transform dense texture patterns reliably (flower meadows)',
-    'Add infrastructure (solar panels, green roofs)',
-    'Submerge objects in water',
-    'Add people or change their clothing reliably'
+  bestPractices: [
+    'Use conversational, descriptive prompts',
+    'Describe the desired end state, not step-by-step changes',
+    'Be specific about mood and atmosphere',
+    'Reference the original image context'
   ]
 };
 
-// Scenario performance ratings (UPDATED after optimization)
+// Scenario performance ratings (Gemini)
 const SCENARIO_PERFORMANCE = {
-  heatwave: '⭐⭐⭐⭐⭐ Excellent (color transformation)',
-  flood: '⭐⭐⭐⭐ Good (atmosphere focus)',
-  windstorm: '⭐⭐⭐⭐ Good (approaching storm)',
-  adaptation: '⭐⭐⭐ Moderate (hopeful palette)'
+  heatwave: '⭐⭐⭐⭐⭐ Excellent',
+  flood: '⭐⭐⭐⭐⭐ Excellent',
+  windstorm: '⭐⭐⭐⭐ Very Good',
+  adaptation: '⭐⭐⭐⭐⭐ Excellent'
 };
 
-// Validate that generated prompt follows FLUX Kontext requirements
+// Validate image prompt (lighter validation for Gemini)
 function validateImagePrompt(prompt) {
   const issues = [];
 
   const wordCount = prompt.split(/\s+/).length;
-  if (wordCount > 45) {
-    issues.push(`Prompt too long: ${wordCount} words (max 40)`);
+  if (wordCount > 100) {
+    issues.push(`Prompt too long: ${wordCount} words (max 100)`);
   }
 
-  const hasInstructionalVerb = /\b(CHANGE|ADD|REPLACE|REMOVE|MAKE)\b/i.test(prompt);
-  if (!hasInstructionalVerb) {
-    issues.push('Missing instructional verb (CHANGE/ADD/REPLACE)');
-  }
-
-  const forbiddenPatterns = [
-    // General FLUX limitations
-    /bending trees/i,
-    /motion blur/i,
-    /submerged in water/i,
-    /underwater/i,
-    /trees blowing/i,
-    /active flood/i,
-    // Windstorm - no debris/damage
-    /fallen branches/i,
-    /scattered debris/i,
-    /overturned/i,
-    /torn awning/i,
-    /damaged structure/i,
-    // Adaptation - no infrastructure additions
-    /solar panel/i,
-    /green roof/i,
-    /bioswale/i,
-    /rain garden/i,
-    /permeable pav/i
-  ];
-
-  forbiddenPatterns.forEach(pattern => {
-    if (pattern.test(prompt)) {
-      issues.push(`Contains unreliable request: ${pattern}`);
-    }
-  });
-
-  if (!/keep.*same|maintain.*composition|preserve/i.test(prompt)) {
-    issues.push('Missing preservation clause');
+  if (wordCount < 10) {
+    issues.push(`Prompt too short: ${wordCount} words (min 10)`);
   }
 
   return { valid: issues.length === 0, issues };
@@ -139,28 +103,24 @@ Make the fiction hyper-local to this place:
 `;
 }
 
-// Scenario-specific prompt strategy guidance (OPTIMIZED)
+// Scenario-specific prompt strategy guidance (Gemini conversational format)
 function buildImagePromptGuidance(scenario) {
   const guidance = {
     heatwave: `
-PROMPT STRATEGY: Focus on COLOR CHANGE verbs.
-Use: "CHANGE sky to orange haze", "CHANGE all vegetation to dead brown", "CHANGE ground to cracked dry earth"
-This scenario has 90%+ success rate.
+PROMPT STYLE: Conversational, descriptive.
+Describe: "Edit this image to show an extreme heatwave. The sky should be orange-amber with heat haze. All vegetation should appear dead, brown, and dried out. The ground looks cracked and parched. Everything has a harsh, sun-bleached quality."
 `,
     flood: `
-PROMPT STRATEGY: Focus on ATMOSPHERE and WET SURFACES only.
-Use: "CHANGE sky to uniform grey overcast", "CHANGE all surfaces to wet dark reflective", "ADD puddles", "MAKE colors muted desaturated"
-DO NOT promise vegetation transformation - leave vegetation as-is or request subtle darkening only.
-Success rate: 80%+ when focused on atmosphere.
+PROMPT STYLE: Conversational, descriptive.
+Describe: "Edit this image to show the aftermath of heavy rain. The sky is grey and overcast. All surfaces are wet and reflective. There are puddles on the ground. The colors are muted and desaturated. It looks like a grey, damp morning."
 `,
     windstorm: `
-PROMPT STRATEGY: Show APPROACHING STORM, not aftermath.
-Use: "CHANGE sky to dark dramatic turbulent storm clouds", "CHANGE lighting to ominous directional", "ADD threatening atmosphere"
-DO NOT request: debris, fallen branches, damage, scattered objects. FLUX cannot add these.
-The IMAGE shows the threat; the FICTION describes the damage.
-Success rate: 85%+ for dramatic sky/atmosphere.
+PROMPT STYLE: Conversational, descriptive.
+Describe: "Edit this image to show an approaching storm. The sky is dark and dramatic with turbulent clouds. The lighting is ominous and directional. The atmosphere feels threatening and heavy."
 `,
-    adaptation: `Use: "CHANGE sky to clear blue", "ENHANCE vegetation to green", "MAKE atmosphere fresh". NO orange/amber/haze.`
+    adaptation: `
+PROMPT STYLE: Conversational, descriptive. POSITIVE outcome only.
+Describe: "Edit this image to show a thriving, well-adapted future. The sky is clear blue with soft clouds. Vegetation is lush and vibrant green. The atmosphere is fresh and pleasant." NO orange, NO haze.`
   };
 
   return guidance[scenario] || '';
@@ -170,65 +130,33 @@ Success rate: 85%+ for dramatic sky/atmosphere.
 const scenarioInstructions = {
 
   heatwave: `
-## HEATWAVE — SSP3-7.0 (BEST PERFORMING SCENARIO ⭐⭐⭐⭐⭐)
-Extreme heat/drought. This scenario works excellently because it requires COLOR CHANGES, not object additions.
+## HEATWAVE SCENARIO
+Extreme heat/drought. Show the oppressive reality of a heatwave.
 
-VISUAL EFFECTS (high success rate):
-- Sky: CHANGE to harsh orange/amber haze, washed out, heat shimmer
-- Vegetation: CHANGE ALL grass, plants, flowers to dead brown straw color. This works well.
-- Trees: CHANGE foliage to wilted, brown-edged, sparse
-- Ground: CHANGE to cracked dry earth, dust, parched soil
-- Building surfaces: ADD warm color cast, slight weathering
-- Overall: Desaturate greens completely, shift palette to browns/oranges
+IMAGE DESCRIPTION:
+Write a conversational prompt describing: orange-amber sky with heat haze, all vegetation dead and brown, parched cracked ground, harsh sun-bleached quality, everything looks dried out and scorched.
 
-ATMOSPHERE: Harsh sunlight, high contrast, heat haze, orange/amber cast
-
-FICTION TONE: A scorching Tuesday in August. Mention temperature (42°C), water restrictions, siesta hours, shade-seeking.
+FICTION TONE: A scorching Tuesday in August. Mention temperature (42°C), water restrictions, siesta hours, shade-seeking. Mundane, not apocalyptic.
 `,
 
   flood: `
-## FLOOD — SSP3-7.0 (GOOD PERFORMANCE ⭐⭐⭐⭐)
-Post-rain atmosphere. Focus ONLY on what FLUX does well: sky, surfaces, mood.
+## FLOOD SCENARIO
+Post-rain atmosphere. Show the grey, wet aftermath.
 
-VISUAL EFFECTS (focus on atmosphere):
-- Sky: CHANGE to uniform grey overcast. NOT dramatic storm clouds. Flat, mundane grey.
-- Surfaces: CHANGE ALL pavement, concrete, roads to wet, dark, reflective black.
-- Puddles: ADD standing water puddles on flat surfaces.
-- Color: DESATURATE everything. Grey/muted palette. Low saturation.
-- Light: Diffused, flat, no harsh shadows.
+IMAGE DESCRIPTION:
+Write a conversational prompt describing: grey overcast sky, all surfaces wet and reflective, puddles on the ground, muted desaturated colors, damp and cold atmosphere, like a rainy Tuesday morning.
 
-DO NOT REQUEST (unreliable):
-- Vegetation transformation (leave plants as-is)
-- Brown/dead vegetation (inconsistent with dense areas)
-- Debris or mud (FLUX can't add objects)
-
-ATMOSPHERE: Grey, muted, wet, cold — like a rainy Tuesday morning
-
-FICTION TONE: The FICTION carries the flood narrative. Describe waterlogged gardens, damaged vegetation, drainage issues, cleanup efforts. The image shows the grey wet atmosphere; the text describes the impact.
+FICTION TONE: Describe waterlogged areas, drainage issues, cleanup efforts. Mundane, not disaster movie.
 `,
 
   windstorm: `
-## WINDSTORM — SSP3-7.0 (GOOD PERFORMANCE ⭐⭐⭐⭐)
-APPROACHING STORM — not aftermath. Show the threatening sky BEFORE impact.
+## WINDSTORM SCENARIO
+Approaching storm. Show the threatening sky before impact.
 
-Why this works: FLUX excels at dramatic skies and lighting. It cannot add debris or damage.
+IMAGE DESCRIPTION:
+Write a conversational prompt describing: dark dramatic turbulent storm clouds, ominous directional lighting, threatening atmosphere, greenish-grey sky, the tense calm before the storm.
 
-VISUAL EFFECTS (high success rate):
-- Sky: CHANGE to dark, dramatic, turbulent storm clouds. Greenish-grey tint. Ominous.
-- Lighting: CHANGE to harsh directional light, high contrast, dramatic shadows
-- Atmosphere: ADD threatening, tense, pre-storm stillness
-- Color: Dark, desaturated, ominous palette
-
-DO NOT REQUEST (FLUX cannot do these):
-- Fallen branches or debris
-- Bent or leaning trees
-- Scattered objects or overturned furniture
-- Torn awnings or structural damage
-- Motion blur or active wind
-
-ATMOSPHERE: Dark, ominous, dramatic sky, the calm before the storm
-
-FICTION TONE: The FICTION describes the aftermath and damage. "The storm that hit last night..." / "Wind speeds reached 140km/h..." / "Cleanup crews are assessing damage..." The image shows the threat; the text narrates the impact.
+FICTION TONE: Describe storm warnings, wind speeds, crews assessing damage, early closures. The image shows the threat; the fiction narrates the aftermath.
 `,
 
   adaptation: `
@@ -347,73 +275,46 @@ The tone should feel like texture of adapted life, not headlines.
 ## PROHIBITED WORDS
 Never use: apocalyptic, devastating, catastrophic, scorching, desperate, flee, collapse, disaster, doom, crisis, emergency (unless naming an official protocol)
 
-## FLUX KONTEXT CAPABILITIES (Critical - follow strictly)
-FLUX CAN reliably do:
-- Change sky/atmosphere dramatically (dramatic clouds, overcast, haze)
-- Shift color palette globally (green → brown, or enhance greens)
-- Add weather mood (heat shimmer, wet surfaces, ominous lighting)
-- Darken/lighten surfaces, make surfaces wet/reflective
-- Change lighting direction, contrast, and mood
+## IMAGE GENERATION (Gemini)
+Write conversational, descriptive prompts that describe the desired transformation.
+Focus on: sky, atmosphere, vegetation state, lighting, overall mood.
 
-FLUX CANNOT reliably do:
-- Add objects (debris, branches, solar panels, infrastructure)
-- Deform geometry (bend trees, lean structures)
-- Transform dense vegetation patterns consistently
-- Add or modify people
+## IMAGE INTENSITY
+Match image intensity to fiction register:
+- Minor inconvenience → subtle changes
+- Routine adaptation → moderate changes
+- Protocol/alert → noticeable changes
 
-## IMAGE INTENSITY SPECTRUM
-Match image intensity to fiction register. Not always orange apocalyptic sky.
-
-HEATWAVE:
-- Intense: orange sky, dense haze, dead vegetation
-- Moderate: yellowish sky, visible heat but not extreme
-- Mild: harsh light, hard shadows, stressed but living vegetation
-
-FLOOD:
-- Intense: large puddles, very wet surfaces
-- Moderate: damp ground, uniform grey sky
-- Mild: post-rain, some wet surfaces, scattered clouds
-
-WINDSTORM:
-- Intense: dark dramatic sky, turbulent clouds
-- Moderate: threatening sky, strong directional light
-- Mild: dynamic cloudy sky, visible breeze in vegetation
-
-ADAPTATION: Always positive — clear blue sky, lush green, pleasant atmosphere (no intensity levels, always success)
-
-Rule: Minor inconvenience = mild visual. Latent tension = moderate. Bureaucratic protocol = intense OR mild depending on context.
+ADAPTATION is always positive: clear blue sky, lush green, pleasant atmosphere.
 
 ## DIVISION OF LABOR
-- IMAGE PROMPT: Focus on sky, atmosphere, color palette, lighting, surface treatment
-- FICTION TEXT: Carry the narrative details (adaptation, routines, policies, human response)
+- IMAGE PROMPT: Describe the visual transformation (atmosphere, colors, mood)
+- FICTION TEXT: Carry the narrative (policies, human response, specific details)
 
-## FLUX KONTEXT SYNTAX RULES
-- Use INSTRUCTIONAL verbs: "CHANGE the sky to..." / "ADD wet reflections" / "MAKE atmosphere..."
-- NEVER use: "The image shows..." / "A scene with..." / "Depicting..."
-- Max 40 words for image prompt
-- MUST end with: "Keep the exact same composition, camera angle, and framing."
+## PROMPT STYLE
+Write as a natural instruction: "Edit this image to show [scenario]. The sky should be [description]. The vegetation appears [state]. The atmosphere feels [mood]."
 
 ${scenarioGuide}
 ${promptGuidance}
 ${locationContext}
 
 ## OUTPUT FORMAT (follow exactly)
-IMG: [Your 40-word max FLUX Kontext prompt. Focus on SKY, ATMOSPHERE, COLOR, LIGHTING. No object additions. No line breaks.]
+IMG: [Conversational prompt describing the image transformation. 20-60 words. Describe the desired end state.]
 
 FICTION: [2-3 sentences IN ENGLISH. Vary the emotional register—not every fiction is peak crisis. Show texture of adapted life. Be specific, hyper-local. Include one concrete detail. Always English regardless of location.]
 
-## EXAMPLE OUTPUTS (showing variety)
+## EXAMPLE OUTPUTS
 
-Heatwave (minor inconvenience):
-IMG: CHANGE sky to hazy white-yellow with gentle heat shimmer on horizon. MAKE colors slightly washed out and warm. ADD subtle dust to air. Keep the exact same composition, camera angle, and framing.
+Heatwave:
+IMG: Edit this image to show an extreme heatwave. The sky is orange-amber with visible heat haze. All grass and plants are dead brown. The ground looks parched and dusty. Everything has a harsh, sun-bleached quality.
 FICTION: The bus shelter's solar panels power a small fan now. It helps, a little. August in this part of town means finding shade has become second nature.
 
-Flood (observation):
-IMG: CHANGE sky to flat grey overcast. MAKE all ground surfaces wet and reflective. ADD muted, desaturated tones throughout. Keep the exact same composition, camera angle, and framing.
+Flood:
+IMG: Edit this image to show the aftermath of heavy rain. The sky is flat grey and overcast. All surfaces are wet and reflective with puddles. The colors are muted and desaturated. It feels like a cold, damp morning.
 FICTION: Water marks on the pharmacy wall—third set this year, María notes on her way to work. The sandbags by the door stay out permanently now.
 
-Adaptation (success):
-IMG: CHANGE sky to clear blue. ENHANCE vegetation to lush green. MAKE atmosphere fresh. Keep same composition.
+Adaptation:
+IMG: Edit this image to show a thriving, well-adapted future. The sky is clear blue with soft clouds. All vegetation is lush and vibrant green. The atmosphere is fresh and pleasant.
 FICTION: The green corridor keeps this block cooler. Kids play outside again.
 
 Remember: Vary the register. Some days are just... different now.` + (scenarioSuffix[scenario] || '');

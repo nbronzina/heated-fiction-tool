@@ -576,23 +576,22 @@
         if (imgPrompt) {
           setLoading("Generating the image...");
           try {
-            const imgRes = await fetch("/api/generate-image", {
+            const imgRes = await fetch("/api/generate-image-gemini", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
                 prompt: imgPrompt,
-                image_base64: imageBase64,
-                media_type: imageMediaType,
-                width: originalWidth,
-                height: originalHeight
+                imageBase64: imageBase64,
+                mimeType: imageMediaType
               })
             });
             const imgData = await imgRes.json();
-            console.log("FAL response:", JSON.stringify(imgData));
-            if (imgData.images && imgData.images[0] && imgData.images[0].url) {
-              showGeneratedImage(imgData.images[0].url);
+            console.log("Gemini response:", imgData.success ? "success" : imgData.error);
+            if (imgData.success && imgData.imageBase64) {
+              const dataUrl = `data:${imgData.mimeType || 'image/png'};base64,${imgData.imageBase64}`;
+              showGeneratedImage(dataUrl);
             } else {
-              console.error("FAL error:", imgData.error || imgData.detail || "No image returned");
+              console.error("Gemini error:", imgData.error || "No image returned");
               showGenError();
             }
           } catch(e) {
@@ -628,20 +627,19 @@
       document.getElementById("gen-shimmer").style.display = "flex";
       if (!generatedPrompt) return;
       try {
-        const imgRes = await fetch("/api/generate-image", {
+        const imgRes = await fetch("/api/generate-image-gemini", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             prompt: generatedPrompt,
-            image_base64: imageBase64,
-            media_type: imageMediaType,
-            width: originalWidth,
-            height: originalHeight
+            imageBase64: imageBase64,
+            mimeType: imageMediaType
           })
         });
         const imgData = await imgRes.json();
-        if (imgData.images && imgData.images[0] && imgData.images[0].url) {
-          showGeneratedImage(imgData.images[0].url);
+        if (imgData.success && imgData.imageBase64) {
+          const dataUrl = `data:${imgData.mimeType || 'image/png'};base64,${imgData.imageBase64}`;
+          showGeneratedImage(dataUrl);
         } else {
           showGenError();
         }
