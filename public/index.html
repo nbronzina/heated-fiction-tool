@@ -81,14 +81,14 @@
       overflow: hidden;
     }
     .upload-zone.has-image { min-height: auto; border-color: rgba(253,207,164,0.15); background: #2a2320; }
-    .results-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; }
-    .results-grid img { width: 100%; height: 480px; object-fit: cover; display: block; }
+    .results-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; align-items: start; }
+    .results-grid img { width: 100%; height: auto; object-fit: contain; display: block; max-height: 80vh; }
     .tiers-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 2px; }
     .step { display: none; }
     .step.active { display: block; }
     @media (max-width: 768px) {
       .results-grid { grid-template-columns: 1fr; }
-      .results-grid img { height: 300px; }
+      .results-grid img { max-height: 60vh; }
       .tiers-grid { grid-template-columns: 1fr; }
       .scenario-grid { grid-template-columns: 1fr !important; }
       .meta-bar { flex-direction: column; gap: 16px !important; }
@@ -170,11 +170,11 @@
         <img id="result-original" alt="Original" />
         <div style="position:absolute;top:20px;left:20px;padding:6px 14px;background:rgba(51,43,40,0.85);backdrop-filter:blur(8px);font-family:'DM Mono',monospace;font-size:10px;letter-spacing:3px;color:#a09890;text-transform:uppercase">Present</div>
       </div>
-      <div id="result-gen-container" style="position:relative;overflow:hidden;background:#2a2320;min-height:480px">
+      <div id="result-gen-container" style="position:relative;overflow:hidden;background:#2a2320;min-height:200px">
         <div id="gen-shimmer" class="shimmer-bg" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center">
           <p class="mono muted" style="font-size:11px;animation:breathe 2s ease infinite">Generating speculative image...</p>
         </div>
-        <img id="result-generated" alt="Speculative future" style="width:100%;height:480px;object-fit:cover;display:none" />
+        <img id="result-generated" alt="Speculative future" style="width:100%;height:auto;object-fit:contain;display:none" />
         <div id="gen-label" style="position:absolute;top:20px;left:20px;padding:6px 14px;backdrop-filter:blur(8px);font-family:'DM Mono',monospace;font-size:10px;letter-spacing:3px;color:#fff;text-transform:uppercase"></div>
         <span id="watermark" style="display:none;position:absolute;bottom:12px;right:12px;color:rgba(253,207,164,0.7);font-family:'DM Mono',monospace;font-size:11px;letter-spacing:2px;text-shadow:0 1px 3px rgba(0,0,0,0.5)">heated.studio</span>
       </div>
