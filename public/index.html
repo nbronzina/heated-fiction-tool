@@ -237,7 +237,7 @@
       { tag: "Prototyping", name: "Speculative Design & AI", duration: "4 weeks", desc: "Collaborative storytelling and rapid prototyping. Functional artefacts from possible futures you can hold, test, and learn from.", who: "Organizations beyond traditional planning" }
     ];
 
-    let currentStep = 0, selectedScenario = null, uploadedDataUrl = null, imageBase64 = null, imageMediaType = "image/jpeg", generatedPrompt = "", locationData = null;
+    let currentStep = 0, selectedScenario = null, uploadedDataUrl = null, imageBase64 = null, imageMediaType = "image/jpeg", generatedPrompt = "", locationData = null, originalWidth = null, originalHeight = null;
 
     function goStep(n) {
       document.querySelectorAll(".step").forEach(el => { el.classList.remove("active"); el.style.display = "none"; });
@@ -257,6 +257,8 @@
       imageMediaType = "image/jpeg";
       generatedPrompt = "";
       locationData = null;
+      originalWidth = null;
+      originalHeight = null;
 
       // Clear file input
       document.getElementById("file-input").value = "";
@@ -322,6 +324,17 @@
     uploadZone.ondrop = (e) => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f && f.type.startsWith("image/")) handleFile(f); };
     fileInput.onchange = (e) => { if (e.target.files[0]) handleFile(e.target.files[0]); };
 
+    function getImageDimensions(file) {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+          URL.revokeObjectURL(img.src);
+          resolve({ width: img.width, height: img.height });
+        };
+        img.src = URL.createObjectURL(file);
+      });
+    }
+
     function extractExifLocation(file) {
       return new Promise((resolve) => {
         EXIF.getData(file, function() {
@@ -359,9 +372,21 @@
     }
 
     async function handleFile(file) {
-      // Reset location
+      // Reset location and dimensions
       locationData = null;
+      originalWidth = null;
+      originalHeight = null;
       document.getElementById("location-badge").style.display = "none";
+
+      // Get image dimensions
+      try {
+        const dimensions = await getImageDimensions(file);
+        originalWidth = dimensions.width;
+        originalHeight = dimensions.height;
+        console.log("Image dimensions:", originalWidth, "x", originalHeight);
+      } catch (e) {
+        console.log("Could not get image dimensions:", e);
+      }
 
       // Read file as data URL
       const r = new FileReader();
@@ -438,7 +463,9 @@
               body: JSON.stringify({
                 prompt: imgPrompt,
                 image_base64: imageBase64,
-                media_type: imageMediaType
+                media_type: imageMediaType,
+                width: originalWidth,
+                height: originalHeight
               })
             });
             const imgData = await imgRes.json();
