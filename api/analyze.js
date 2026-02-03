@@ -108,6 +108,175 @@ function getRandomPeopleInstruction(scenario) {
   return variations[randomIndex];
 }
 
+// Intensity levels per scenario for image generation variety
+const intensityLevels = {
+  heatwave: {
+    intense: { sky: 'harsh orange with visible heat shimmer', vegetation: 'completely dead and brown', surfaces: 'cracked and dusty' },
+    moderate: { sky: 'yellowish and hazy', vegetation: 'stressed and browning', surfaces: 'dry and faded' },
+    mild: { sky: 'washed out with harsh light', vegetation: 'wilting and dry', surfaces: 'sun-bleached' }
+  },
+  flood: {
+    intense: { sky: 'dark heavy grey with low clouds', water: 'large muddy puddles collecting everywhere', surfaces: 'dark wet and waterlogged' },
+    moderate: { sky: 'flat grey and overcast', water: 'standing water in low areas', surfaces: 'wet and reflective' },
+    mild: { sky: 'grey and muted', water: 'damp with some puddles', surfaces: 'recently rained on' }
+  },
+  windstorm: {
+    intense: { sky: 'dark dramatic with ominous storm clouds', mood: 'threatening and turbulent', light: 'harsh and directional' },
+    moderate: { sky: 'grey with fast-moving clouds', mood: 'unsettled and tense', light: 'diffused and moody' },
+    mild: { sky: 'overcast with dynamic clouds', mood: 'pre-storm stillness', light: 'flat and grey' }
+  },
+  adaptation: {
+    vibrant: { vegetation: 'lush and deeply green', sky: 'clear bright blue', mood: 'beautiful and inviting' },
+    pleasant: { vegetation: 'healthy and green', sky: 'pleasant with soft clouds', mood: 'comfortable and welcoming' },
+    subtle: { vegetation: 'fresh and well-maintained', sky: 'clear and calm', mood: 'peaceful and improved' }
+  }
+};
+
+// Build Gemini image prompt programmatically with varied intensity
+function buildGeminiPrompt(scenario) {
+  // Select random intensity level
+  const levels = Object.keys(intensityLevels[scenario] || {});
+  if (levels.length === 0) return null;
+
+  const randomLevel = levels[Math.floor(Math.random() * levels.length)];
+  const intensity = intensityLevels[scenario][randomLevel];
+
+  // Get random people instruction
+  const peopleInstruction = getRandomPeopleInstruction(scenario);
+  const peopleText = peopleInstruction ? `Any people visible in the image: ${peopleInstruction}.` : '';
+
+  let prompt = '';
+
+  switch(scenario) {
+    case 'heatwave':
+      prompt = `Edit this image to show an extreme heatwave scenario. The sky should be ${intensity.sky}. All grass, plants and vegetation should appear ${intensity.vegetation}. Ground and surfaces look ${intensity.surfaces}. ${peopleText} Maintain the exact same composition, architecture, and camera angle.`;
+      break;
+
+    case 'flood':
+      prompt = `Edit this image to show the aftermath of heavy rainfall and flooding. The sky is ${intensity.sky}. ${intensity.water}. All surfaces are ${intensity.surfaces}. ${peopleText} Maintain the exact same composition, architecture, and camera angle.`;
+      break;
+
+    case 'windstorm':
+      prompt = `Edit this image to show an approaching severe windstorm. The sky is ${intensity.sky}. The atmosphere feels ${intensity.mood}. Lighting is ${intensity.light}. ${peopleText} Maintain the exact same composition, architecture, and camera angle.`;
+      break;
+
+    case 'adaptation':
+      prompt = `Edit this image to show successful climate adaptation - a POSITIVE future. Vegetation is ${intensity.vegetation} and thriving. The sky is ${intensity.sky}. The overall atmosphere is ${intensity.mood}. ${peopleText} Do NOT add any orange tones, haze, or signs of stress. Maintain the exact same composition, architecture, and camera angle.`;
+      break;
+
+    default:
+      return null;
+  }
+
+  return { prompt, intensity: randomLevel, peopleInstruction };
+}
+
+// Fiction registers with varied examples per scenario
+const fictionRegisters = {
+  heatwave: [
+    { type: 'minor_inconvenience', examples: [
+      "The AC unit's been humming since Monday. Nobody's turned it off.",
+      "Third iced coffee before noon. The barista stopped commenting.",
+      "The walk from the car feels longer every summer."
+    ]},
+    { type: 'normalized_routine', examples: [
+      "Siesta hours are 2-5 now. Even the bank closes.",
+      "Morning meetings only—the conference room's unbearable by lunch.",
+      "The kids know to stay inside until the shadow reaches the fence."
+    ]},
+    { type: 'bureaucratic_normal', examples: [
+      "Heat protocol level 2. Terrace service suspended.",
+      "The city extended cooling center hours through September.",
+      "Outdoor work permits require hourly shade breaks now."
+    ]},
+    { type: 'latent_tension', examples: [
+      "The lawn went brown in June. Nobody's replanted.",
+      "The pool's been drained since the restrictions started.",
+      "Somewhere in the building, someone's AC is always running."
+    ]}
+  ],
+
+  flood: [
+    { type: 'minor_inconvenience', examples: [
+      "The lobby flooded again. Mop's in its usual spot.",
+      "Had to take the long way—underpass is closed.",
+      "The basement dehumidifier runs 24/7 now."
+    ]},
+    { type: 'normalized_routine', examples: [
+      "Sandbag delivery is the first Tuesday of storm season.",
+      "Everyone checks the drainage forecast before parking.",
+      "The ground floor moved everything above knee height years ago."
+    ]},
+    { type: 'bureaucratic_normal', examples: [
+      "Flash flood warning means street parking relocates to level 3.",
+      "Insurance requires photos within 24 hours now.",
+      "The retrofit assessment came back. Expensive but necessary."
+    ]},
+    { type: 'latent_tension', examples: [
+      "The waterline from last spring is still visible on the wall.",
+      "Three houses on the block are for sale. Same reason.",
+      "Nobody uses the basement storage anymore. Just in case."
+    ]}
+  ],
+
+  windstorm: [
+    { type: 'minor_inconvenience', examples: [
+      "Had to reschedule the terrace lunch. Again.",
+      "The recycling bins made it two streets over this time.",
+      "Lost the patio umbrella. Third one this year."
+    ]},
+    { type: 'normalized_routine', examples: [
+      "Storm prep is Sunday night now. Part of the routine.",
+      "The outdoor furniture lives in the garage October through March.",
+      "Wind advisory means the scaffolding comes down by 3pm."
+    ]},
+    { type: 'bureaucratic_normal', examples: [
+      "Building management sends the checklist every storm season.",
+      "Gusts above 90km/h trigger the automatic shutters.",
+      "The arborist flags at-risk trees quarterly now."
+    ]},
+    { type: 'latent_tension', examples: [
+      "That oak's been leaning since the last big one.",
+      "The pergola's repair is still on the to-do list.",
+      "Insurance called. They want photos of the roof anchors."
+    ]}
+  ],
+
+  adaptation: [
+    { type: 'successful_adaptation', examples: [
+      "The courtyard retrofit pays off—five degrees cooler than the street.",
+      "The green wall's doing exactly what the architect promised.",
+      "Passive cooling works. Haven't touched the AC in weeks."
+    ]},
+    { type: 'community_win', examples: [
+      "The building committee got it right. Worth every assessment.",
+      "The street voted for permeable paving. No regrets.",
+      "Neighbors pitched in for the shared rain garden. It works."
+    ]},
+    { type: 'normalized_improvement', examples: [
+      "The kids do homework on the terrace now. It's comfortable.",
+      "Dinner outside is possible again, even in August.",
+      "The courtyard's actually pleasant. People use it."
+    ]},
+    { type: 'quiet_satisfaction', examples: [
+      "Worth every euro of the renovation.",
+      "The plants needed no watering last month. System works.",
+      "Visitors always ask about the cooling. Happy to explain."
+    ]}
+  ]
+};
+
+// Get random fiction starting point for Claude to expand
+function getRandomFiction(scenario) {
+  const registers = fictionRegisters[scenario];
+  if (!registers) return null;
+
+  const randomRegister = registers[Math.floor(Math.random() * registers.length)];
+  const randomExample = randomRegister.examples[Math.floor(Math.random() * randomRegister.examples.length)];
+
+  return { type: randomRegister.type, text: randomExample };
+}
+
 // Validate image prompt (lighter validation for Gemini)
 function validateImagePrompt(prompt) {
   const issues = [];
@@ -143,104 +312,58 @@ Make the fiction hyper-local to this place:
 `;
 }
 
-// Scenario-specific prompt strategy guidance (Gemini conversational format)
-function buildImagePromptGuidance(scenario) {
-  const guidance = {
-    heatwave: `
-PROMPT STYLE: Conversational, descriptive.
-Describe: "Edit this image to show an extreme heatwave. The sky should be orange-amber with heat haze. All vegetation should appear dead, brown, and dried out. The ground looks cracked and parched. Everything has a harsh, sun-bleached quality."
-`,
-    flood: `
-PROMPT STYLE: Conversational, descriptive.
-Describe: "Edit this image to show the aftermath of heavy rain. The sky is grey and overcast. All surfaces are wet and reflective. There are puddles on the ground. The colors are muted and desaturated. It looks like a grey, damp morning."
-`,
-    windstorm: `
-PROMPT STYLE: Conversational, descriptive.
-Describe: "Edit this image to show an approaching storm. The sky is dark and dramatic with turbulent clouds. The lighting is ominous and directional. The atmosphere feels threatening and heavy."
-`,
-    adaptation: `
-PROMPT STYLE: Conversational, descriptive. POSITIVE outcome only.
-Describe: "Edit this image to show a thriving, well-adapted future. The sky is clear blue with soft clouds. Vegetation is lush and vibrant green. The atmosphere is fresh and pleasant." NO orange, NO haze.`
-  };
-
-  return guidance[scenario] || '';
-}
-
-// Scenario-specific instructions (OPTIMIZED for FLUX strengths)
+// Scenario-specific instructions (for Claude fiction generation)
 const scenarioInstructions = {
 
   heatwave: `
-## HEATWAVE SCENARIO
-Extreme heat/drought. Show the oppressive reality of a heatwave.
+## HEATWAVE — Extreme heat, mundane tone
 
-IMAGE DESCRIPTION:
-Write a conversational prompt describing: orange-amber sky with heat haze, all vegetation dead and brown, parched cracked ground, harsh sun-bleached quality, everything looks dried out and scorched.
+FICTION REGISTER (the system has selected one for you):
+- Minor inconvenience: "The AC's been running nonstop since Tuesday"
+- Normalized routine: "Third siesta hour this week"
+- Bureaucratic normal: "Heat protocol level 2 means the terrace closes at 2pm"
+- Latent tension: "Nobody mentions the water bill anymore"
 
-FICTION TONE: A scorching Tuesday in August. Mention temperature (42°C), water restrictions, siesta hours, shade-seeking. Mundane, not apocalyptic.
+Your task: Expand on the provided starting point. Add specific details (temperatures, times, small observations). Keep the same register—don't escalate to crisis.
 `,
 
   flood: `
-## FLOOD SCENARIO
-Post-rain atmosphere. Show the grey, wet aftermath.
+## FLOOD — Post-rain aftermath, mundane tone
 
-IMAGE DESCRIPTION:
-Write a conversational prompt describing: grey overcast sky, all surfaces wet and reflective, puddles on the ground, muted desaturated colors, damp and cold atmosphere, like a rainy Tuesday morning.
+FICTION REGISTER (the system has selected one for you):
+- Minor inconvenience: "The drainage couldn't keep up again"
+- Normalized routine: "Third time this month we've had to mop the lobby"
+- Bureaucratic normal: "Street-level parking suspended until further notice"
+- Latent tension: "Insurance stopped covering ground floors last year"
 
-FICTION TONE: Describe waterlogged areas, drainage issues, cleanup efforts. Mundane, not disaster movie.
+Your task: Expand on the provided starting point. Add specific details (water levels, cleanup, community response). Keep the same register—don't escalate to disaster.
 `,
 
   windstorm: `
-## WINDSTORM SCENARIO
-Approaching storm. Show the threatening sky before impact.
+## WINDSTORM — Approaching storm or aftermath, mundane tone
 
-IMAGE DESCRIPTION:
-Write a conversational prompt describing: dark dramatic turbulent storm clouds, ominous directional lighting, threatening atmosphere, greenish-grey sky, the tense calm before the storm.
+FICTION REGISTER (the system has selected one for you):
+- Minor inconvenience: "Had to cancel the outdoor meeting again"
+- Normalized routine: "The storm warning app has become part of morning coffee"
+- Bureaucratic normal: "Wind advisory means the scaffolding comes down by 3pm"
+- Latent tension: "The old oak out front has a lean nobody wants to talk about"
 
-FICTION TONE: Describe storm warnings, wind speeds, crews assessing damage, early closures. The image shows the threat; the fiction narrates the aftermath.
+Your task: Expand on the provided starting point. Add specific details (wind speeds, preparations, small disruptions). Keep the same register—don't escalate to destruction.
 `,
 
   adaptation: `
-## ADAPTATION — THE POSITIVE SCENARIO
+## ADAPTATION — Successful climate adaptation, POSITIVE tone only
 
-This shows a SUCCESSFUL future. Life is BETTER, not worse.
+FICTION REGISTER (the system has selected one for you):
+- Successful adaptation: "The retrofit finally pays off—five degrees cooler"
+- Community win: "The building committee got something right for once"
+- Normalized improvement: "Kids do homework on the terrace now"
+- Quiet satisfaction: "Worth every euro of the renovation"
 
-IMAGE:
-- Clear blue sky, soft clouds
-- Lush vibrant green vegetation
-- Fresh, pleasant atmosphere
-- NEVER: orange, haze, amber, sepia, brown
+Your task: Expand on the provided starting point. Add specific details (improvements, comfort, satisfaction). Keep it POSITIVE—no crisis, no alerts, no problems.
 
-FICTION:
-- Success story: "retrofit worked", kids playing outside, open windows
-- NEVER: crisis, alerts, air quality problems, restrictions
-
-EXAMPLE:
-IMG: CHANGE sky to clear blue with soft clouds. ENHANCE vegetation to lush vibrant green. MAKE atmosphere fresh and inviting. Keep same composition.
-FICTION: The courtyard retrofit pays off—three degrees cooler. Kids do homework outside now.
+⚠️ NEVER use: orange, haze, brown, dead, harsh, crisis, emergency, restrictions
 `
-};
-
-// Scenario-specific reminders to inject into user message (reinforces system prompt)
-const scenarioReminders = {
-  heatwave: `⚠️ HEATWAVE SCENARIO:
-- Image: Orange/amber sky, dead brown vegetation, heat haze, harsh light
-- Fiction: Heat protocols, shade-seeking, adjusted routines, specific temperatures
-- Mundane tone: "A hot Tuesday", not apocalypse`,
-
-  flood: `⚠️ FLOOD SCENARIO:
-- Image: Grey overcast sky, wet surfaces, puddles, muted colors
-- Fiction: Post-rain cleanup, drainage issues, community response
-- Mundane tone: "Morning after storms", not disaster movie`,
-
-  windstorm: `⚠️ WINDSTORM SCENARIO:
-- Image: Dark dramatic sky, ominous atmosphere, high contrast
-- Fiction: Storm warnings, early closures, crews assessing
-- Mundane tone: "Storm passed through", not destruction`,
-
-  adaptation: `⚠️ ADAPTATION SCENARIO - THE ONLY POSITIVE ONE:
-- Image: CLEAR BLUE SKY, lush GREEN vegetation, pleasant soft light. NO orange, NO haze, NO brown.
-- Fiction: SUCCESS story only. Comfort, "the retrofit worked", kids playing outside, open windows.
-- DO NOT write about: crisis, alerts, air quality problems, blinds down, restricted time outside.`
 };
 
 // Final check suffix for system prompt
@@ -276,29 +399,25 @@ export default async function handler(req, res) {
   }
   console.log('========================');
 
-  // Check cache first
-  const imageData = req.body.messages?.[0]?.content?.find(b => b.type === 'image')?.source?.data || '';
-  const cacheKey = await getCacheKey(imageData, scenario, location?.city);
-  const cached = analysisCache.get(cacheKey);
-  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-    console.log('[CACHE HIT]', cacheKey.slice(0, 8));
-    return res.status(200).json(cached.data);
-  }
+  // NOTE: Cache disabled to ensure variety in outputs
+  // Each request gets fresh intensity + fiction register combinations
 
   const locationContext = buildLocationContext(location);
   const scenarioGuide = scenarioInstructions[scenario] || scenarioInstructions.heatwave;
-  const promptGuidance = buildImagePromptGuidance(scenario);
 
-  const systemPrompt = `You are a climate design fiction specialist for Heated Studio. You transform architectural renders and design images into plausible climate futures.
+  // Generate image prompt programmatically (not by Claude)
+  const geminiPromptData = buildGeminiPrompt(scenario);
+  const generatedImagePrompt = geminiPromptData?.prompt || '';
+
+  // Get random fiction starting point for Claude to expand
+  const fictionData = getRandomFiction(scenario);
+  const fictionStartingPoint = fictionData?.text || '';
+  const fictionRegister = fictionData?.type?.replace(/_/g, ' ') || '';
+
+  const systemPrompt = `You are a climate design fiction specialist for Heated Studio. Your ONLY task is to write a short fiction dispatch.
 
 ## CORE PHILOSOPHY
 - MUNDANE, NOT APOCALYPTIC: Show "a grey Tuesday in November", not catastrophe
-- SPECTRUM OF MUNDANITY: Climate change isn't constant emergency. Vary the register:
-  * Minor inconvenience (30%): "The café moved its umbrellas to the shaded side. Regulars adjusted."
-  * Normalized routine change (30%): "Sara checks the UV index before her run now. Most days she goes at 6am."
-  * Successful adaptation (20%): "The shade sails went up in 2029. The street feels almost pleasant."
-  * Bureaucratic normal (15%): "Heat protocol kicks in above 42°C. Third time this month."
-  * Latent tension (5%): "The fountain hasn't worked since April. Nobody knows when water comes back."
 - HYPER-LOCAL: People relate to their zip code. Make it feel specific, not generic
 - TIME HORIZON: Set fictions between 2030-2032 (optimal) or max 2036. Near enough to feel real.
 
@@ -315,59 +434,32 @@ The tone should feel like texture of adapted life, not headlines.
 ## PROHIBITED WORDS
 Never use: apocalyptic, devastating, catastrophic, scorching, desperate, flee, collapse, disaster, doom, crisis, emergency (unless naming an official protocol)
 
-## IMAGE GENERATION (Gemini)
-Write conversational, descriptive prompts that describe the desired transformation.
-Focus on: sky, atmosphere, vegetation state, lighting, overall mood.
-
-## IMAGE INTENSITY
-Match image intensity to fiction register:
-- Minor inconvenience → subtle changes
-- Routine adaptation → moderate changes
-- Protocol/alert → noticeable changes
-
-ADAPTATION is always positive: clear blue sky, lush green, pleasant atmosphere.
-
-## DIVISION OF LABOR
-- IMAGE PROMPT: Describe the visual transformation (atmosphere, colors, mood)
-- FICTION TEXT: Carry the narrative (policies, human response, specific details)
-
-## PROMPT STYLE
-Write as a natural instruction: "Edit this image to show [scenario]. The sky should be [description]. The vegetation appears [state]. The atmosphere feels [mood]."
-
 ${scenarioGuide}
-${promptGuidance}
 ${locationContext}
 
+## YOUR TASK
+You are given a STARTING POINT for a fiction dispatch. Expand it into 2-3 sentences while:
+- Keeping the same emotional register (${fictionRegister})
+- Adding specific details (times, temperatures, names, measurements)
+- Making it feel hyper-local if location is provided
+- Staying mundane, not escalating to crisis
+
 ## OUTPUT FORMAT (follow exactly)
-IMG: [Conversational prompt describing the image transformation. 20-60 words. Describe the desired end state. If people instructions are provided, include them as the LAST sentence of the IMG prompt.]
+FICTION: [Your 2-3 sentence expansion. English only. Keep the register: ${fictionRegister}]
 
-FICTION: [2-3 sentences IN ENGLISH. Vary the emotional register—not every fiction is peak crisis. Show texture of adapted life. Be specific, hyper-local. Include one concrete detail. Always English regardless of location.]
-
-## EXAMPLE OUTPUTS
-
-Heatwave:
-IMG: Edit this image to show an extreme heatwave. The sky is orange-amber with visible heat haze. All grass and plants are dead brown. The ground looks parched and dusty. Everything has a harsh, sun-bleached quality. People wear wide-brimmed sun hats and seek shade.
-FICTION: The bus shelter's solar panels power a small fan now. It helps, a little. August in this part of town means finding shade has become second nature.
-
-Flood:
-IMG: Edit this image to show the aftermath of heavy rain. The sky is flat grey and overcast. All surfaces are wet and reflective with puddles. The colors are muted and desaturated. It feels like a cold, damp morning. People wear rubber boots and carry umbrellas.
-FICTION: Water marks on the pharmacy wall—third set this year, María notes on her way to work. The sandbags by the door stay out permanently now.
-
-Adaptation:
-IMG: Edit this image to show a thriving, well-adapted future. The sky is clear blue with soft clouds. All vegetation is lush and vibrant green. The atmosphere is fresh and pleasant.
-FICTION: The green corridor keeps this block cooler. Kids play outside again.
-
-Remember: Vary the register. Some days are just... different now.` + (scenarioSuffix[scenario] || '');
+## STARTING POINT TO EXPAND
+"${fictionStartingPoint}"` + (scenarioSuffix[scenario] || '');
 
   try {
-    // Get scenario reminder and random people instruction for user message
-    const reminder = scenarioReminders[scenario] || '';
-    const peopleInstruction = getRandomPeopleInstruction(scenario);
-    const peopleInstructionForPrompt = peopleInstruction ?
-      `\n\n🧑 PEOPLE IN IMAGE (MANDATORY FOR IMG PROMPT): If there are people visible in the original image, your IMG prompt MUST include this instruction for how to show them: "${peopleInstruction}". Include this as the LAST sentence of your IMG prompt.` : '';
-    const fullReminder = reminder + peopleInstructionForPrompt;
+    // Simplified user message - Claude only needs to write fiction now
+    const userInstruction = `Look at this image. Write a climate fiction dispatch for the ${scenario} scenario.
 
-    // Fix media types in image content blocks AND inject scenario reminder into text
+Starting point to expand: "${fictionStartingPoint}"
+Register to maintain: ${fictionRegister}
+
+Output only FICTION: followed by your 2-3 sentence dispatch.`;
+
+    // Fix media types in image content blocks AND replace text with simplified instruction
     const messages = (req.body.messages || []).map(msg => ({
       ...msg,
       content: (msg.content || []).map(block => {
@@ -381,11 +473,11 @@ Remember: Vary the register. Some days are just... different now.` + (scenarioSu
             }
           };
         }
-        // Inject scenario reminder into user text message
-        if (block.type === 'text' && fullReminder) {
+        // Replace user text with simplified instruction
+        if (block.type === 'text') {
           return {
             ...block,
-            text: `${fullReminder}\n\n${block.text}`
+            text: userInstruction
           };
         }
         return block;
@@ -401,16 +493,15 @@ Remember: Vary the register. Some days are just... different now.` + (scenarioSu
       system: systemPrompt
     };
 
-    // Debug: Log system prompt for adaptation
-    if (scenario === 'adaptation') {
-      console.log('=== ADAPTATION PROMPT DEBUG ===');
-      console.log('System prompt length:', systemPrompt.length);
-      console.log('Contains CRITICAL INSTRUCTION:', systemPrompt.includes('CRITICAL INSTRUCTION'));
-      console.log('Contains "kids playing":', systemPrompt.includes('kids playing'));
-      console.log('Contains "DO NOT write about":', systemPrompt.includes('DO NOT write about'));
-      console.log('Scenario guide preview:', scenarioGuide?.substring(0, 400));
-      console.log('================================');
-    }
+    // Debug: Log prompt generation
+    console.log('=== PROMPT GENERATION ===');
+    console.log('Scenario:', scenario);
+    console.log('Image intensity:', geminiPromptData?.intensity || 'N/A');
+    console.log('People instruction:', geminiPromptData?.peopleInstruction || 'None');
+    console.log('Fiction register:', fictionRegister);
+    console.log('Fiction starting point:', fictionStartingPoint);
+    console.log('Generated IMG prompt:', generatedImagePrompt.substring(0, 150) + '...');
+    console.log('=========================');
 
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
@@ -423,11 +514,22 @@ Remember: Vary the register. Some days are just... different now.` + (scenarioSu
     });
     const data = await response.json();
 
-    // Debug logging
+    // Combine programmatic IMG prompt with Claude's fiction response
     if (data.content && data.content[0]?.text) {
-      const text = data.content[0].text;
-      const imgMatch = text.match(/IMG:\s*(.+?)(?=FICTION:|$)/is);
-      const imgPrompt = imgMatch ? imgMatch[1].trim() : '';
+      const claudeText = data.content[0].text;
+
+      // Extract fiction from Claude's response
+      const fictionMatch = claudeText.match(/FICTION:\s*(.+)/is);
+      const fiction = fictionMatch ? fictionMatch[1].trim() : claudeText.trim();
+
+      // Combine into expected format for frontend
+      const combinedResponse = `IMG: ${generatedImagePrompt}\n\nFICTION: ${fiction}`;
+
+      // Replace Claude's response with combined format
+      data.content[0].text = combinedResponse;
+
+      // Debug logging
+      const imgPrompt = generatedImagePrompt;
       const wordCount = imgPrompt.split(/\s+/).length;
       const validation = validateImagePrompt(imgPrompt);
 
@@ -435,18 +537,16 @@ Remember: Vary the register. Some days are just... different now.` + (scenarioSu
       console.log('Scenario:', scenario);
       console.log('Expected performance:', SCENARIO_PERFORMANCE[scenario] || 'Unknown');
       console.log('Location:', location ? `${location.city}, ${location.country}` : 'Not detected');
-      console.log('Prompt Word Count:', wordCount);
+      console.log('IMG Prompt Word Count:', wordCount);
       console.log('Validation:', validation.valid ? '✓ Valid' : `✗ Issues: ${validation.issues.join(', ')}`);
-      console.log('People instruction provided:', peopleInstruction || 'None');
-      console.log('People instruction in IMG prompt:', imgPrompt.toLowerCase().includes('people') || imgPrompt.toLowerCase().includes('figures') ? '✓ Yes' : '✗ No');
-      console.log('IMG prompt preview:', imgPrompt.substring(0, 200));
+      console.log('Intensity level:', geminiPromptData?.intensity || 'N/A');
+      console.log('People in prompt:', imgPrompt.toLowerCase().includes('people') || imgPrompt.toLowerCase().includes('any people') ? '✓ Yes' : '✗ No');
+      console.log('Fiction register:', fictionRegister);
+      console.log('Claude fiction preview:', fiction.substring(0, 150));
       console.log('=======================');
     }
 
-    // Store in cache
-    analysisCache.set(cacheKey, { data, timestamp: Date.now() });
-    console.log('[CACHE MISS - STORED]', cacheKey.slice(0, 8));
-
+    // NOTE: Cache disabled to ensure variety in outputs
     res.status(200).json(data);
   } catch (err) {
     console.error('Analyze API error:', err);
