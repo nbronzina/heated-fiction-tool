@@ -45,7 +45,7 @@ export default async function handler(req, res) {
     console.log('================================');
 
     const response = await ai.models.generateContent({
-      model: "gemini-2.0-flash-exp-image-generation",
+      model: "gemini-2.0-flash-exp",
       contents: [
         {
           parts: [
@@ -69,6 +69,9 @@ export default async function handler(req, res) {
     // Extract generated image from response
     if (response.candidates && response.candidates[0]?.content?.parts) {
       for (const part of response.candidates[0].content.parts) {
+        if (part.text) {
+          console.log('[GEMINI] Text response:', part.text.substring(0, 500));
+        }
         if (part.inlineData) {
           console.log('[GEMINI] Image generated successfully');
           return res.status(200).json({
