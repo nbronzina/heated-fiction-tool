@@ -7,6 +7,49 @@ function getMediaTypeFromBase64(base64String) {
   return 'image/jpeg'; // fallback
 }
 
+// Documented FLUX Kontext capabilities and limitations
+const FLUX_LIMITATIONS = {
+  canDo: [
+    'Change sky/atmosphere dramatically',
+    'Shift color palette globally (green → brown)',
+    'Add weather effects (haze, overcast)',
+    'Darken/lighten surfaces',
+    'Add puddles on flat simple surfaces',
+    'Change lighting direction and mood',
+    'Preserve composition and framing'
+  ],
+  cannotDo: [
+    'Add complex objects (debris, fallen branches)',
+    'Deform geometry (bend trees, lean structures)',
+    'Create motion blur or active weather',
+    'Transform dense texture patterns reliably (flower meadows)',
+    'Add infrastructure (solar panels, green roofs)',
+    'Submerge objects in water',
+    'Add people or change their clothing reliably'
+  ],
+  bestResults: [
+    'Heatwave scenario (color transformation)',
+    'Images with clear surfaces and simple vegetation',
+    'Architectural renders with hard surfaces',
+    'Interior spaces',
+    'Product photography'
+  ],
+  worstResults: [
+    'Dense meadows or complex vegetation patterns',
+    'Requests for physical object additions',
+    'Windstorm debris',
+    'Adaptation infrastructure'
+  ]
+};
+
+// Scenario performance ratings
+const SCENARIO_PERFORMANCE = {
+  heatwave: '⭐⭐⭐⭐⭐ Excellent',
+  flood: '⭐⭐⭐ Moderate',
+  windstorm: '⭐⭐ Limited (atmosphere only)',
+  adaptation: '⭐⭐ Limited (atmosphere only)'
+};
+
 // Validate that generated prompt follows FLUX Kontext requirements
 function validateImagePrompt(prompt) {
   const issues = [];
@@ -27,12 +70,15 @@ function validateImagePrompt(prompt) {
     /submerged in water/i,
     /underwater/i,
     /trees blowing/i,
-    /active flood/i
+    /active flood/i,
+    /fallen branches/i,
+    /scattered debris/i,
+    /overturned/i
   ];
 
   forbiddenPatterns.forEach(pattern => {
     if (pattern.test(prompt)) {
-      issues.push(`Contains impossible request: ${pattern}`);
+      issues.push(`Contains unreliable request: ${pattern}`);
     }
   });
 
@@ -62,74 +108,122 @@ Make the fiction hyper-local to this place:
 `;
 }
 
-// Scenario-specific instructions aligned with IPCC SSPs
+// Scenario-specific prompt strategy guidance
+function buildImagePromptGuidance(scenario) {
+  const guidance = {
+    heatwave: `
+PROMPT STRATEGY: Focus on COLOR CHANGE verbs.
+Use: "CHANGE sky to orange haze", "CHANGE all vegetation to dead brown", "CHANGE ground to cracked dry earth"
+This scenario has 90%+ success rate.
+`,
+    flood: `
+PROMPT STRATEGY: Focus on ATMOSPHERE and SURFACE changes.
+Use: "CHANGE sky to grey overcast", "CHANGE surfaces to wet reflective", "ADD puddles"
+Avoid: Expecting dense vegetation to transform completely.
+Success rate: 60-70% depending on image complexity.
+`,
+    windstorm: `
+PROMPT STRATEGY: Focus on SKY and LIGHTING only.
+Use: "CHANGE sky to dark storm clouds", "CHANGE lighting to dramatic high contrast"
+DO NOT request: debris, fallen branches, bent trees, scattered objects.
+Success rate: 50% (atmosphere only, no physical damage).
+`,
+    adaptation: `
+PROMPT STRATEGY: Focus on PLEASANT ATMOSPHERE.
+Use: "CHANGE to pleasant daylight", "CHANGE vegetation to healthy Mediterranean"
+DO NOT request: solar panels, green roofs, infrastructure additions.
+Success rate: 40% (lighting change only, rely on FICTION for narrative).
+`
+  };
+
+  return guidance[scenario] || '';
+}
+
+// Scenario-specific instructions with documented performance levels
 const scenarioInstructions = {
+
   heatwave: `
-## HEATWAVE — SSP3-7.0 Climate Scenario
-Extreme heat event in a +2.7°C world. Focus on drought, heat stress, and human adaptation.
+## HEATWAVE — SSP3-7.0 (BEST PERFORMING SCENARIO)
+Extreme heat/drought. This scenario works excellently because it requires COLOR CHANGES, not object additions.
 
-VISUAL EFFECTS:
-- Sky: CHANGE to harsh, washed-out, pale orange/yellow haze
-- Surfaces: ADD heat shimmer, dust, cracked dry earth
-- Materials: ADD thermal stress cracks on concrete, faded/chalked paint, warped wood
-- Vegetation: CHANGE ALL plants, grass, trees to dead brown/straw color. No green visible.
-- Water features: Show empty, cracked, dried out
-- People: ADD sun hats, UV shields, water bottles, light clothing, seeking shade
+VISUAL EFFECTS (high success rate):
+- Sky: CHANGE to harsh orange/amber haze, washed out, heat shimmer
+- Vegetation: CHANGE ALL grass, plants, flowers to dead brown straw color. This works well.
+- Trees: CHANGE foliage to wilted, brown-edged, sparse
+- Ground: CHANGE to cracked dry earth, dust, parched soil
+- Building surfaces: ADD warm color cast, slight weathering
+- Overall: Desaturate greens completely, shift palette to browns/oranges
 
-ATMOSPHERE: High contrast, harsh shadows, heat haze distortion, desaturated greens
+ATMOSPHERE: Harsh sunlight, high contrast, heat haze, orange/amber cast
 
-FICTION TONE: A hot Tuesday in August. Mention temperature, shade-seeking behavior, water rationing, siesta culture adaptation.
+FICTION TONE: A scorching Tuesday in August. Mention temperature (42°C), water restrictions, siesta hours, shade-seeking.
+
+NOTE: This scenario consistently produces strong results. Prioritize color transformation over object addition.
 `,
 
   flood: `
-## FLOOD — SSP3-7.0 Climate Scenario
-Post-heavy-rain aftermath. NOT active flooding—show the morning after.
+## FLOOD — SSP3-7.0 (MODERATE PERFORMANCE)
+Post-rain aftermath. Works for atmosphere; vegetation transformation is inconsistent.
 
-VISUAL EFFECTS:
-- Sky: CHANGE to uniform grey overcast (NOT dramatic storm clouds)
-- Ground: ADD puddles, standing water, wet reflective surfaces
-- Materials: ADD waterline marks on walls, wet stains, darkened surfaces, early efflorescence
-- Vegetation: CHANGE ALL plants to flattened, waterlogged, muddy. Dark wet green, matted down.
-- Debris: ADD scattered soggy debris, wet leaves stuck to surfaces, sediment deposits
-- People: ADD rain boots, umbrellas, rolled-up pants, cleaning up
+VISUAL EFFECTS (focus on what works):
+- Sky: CHANGE to uniform grey overcast. NOT dramatic storm clouds. This works well.
+- Surfaces: CHANGE pavement to wet, dark, reflective. This works well.
+- Puddles: ADD puddles on flat surfaces. Works partially.
+- Walls: ADD waterline stains, wet marks on lower portions. Works partially.
+- Vegetation: CHANGE to flattened, wet, muddy. INCONSISTENT with dense meadows.
+- Color: Desaturate everything, grey/brown palette, muted tones
 
-ATMOSPHERE: Grey, muted, low saturation, wet surfaces reflecting overcast sky
+ATMOSPHERE: Grey, muted, wet, low saturation — like a rainy Tuesday morning
 
-FICTION TONE: A grey morning after heavy overnight rain. Mention drainage issues, cleanup efforts, community response. Mundane, not apocalyptic.
+FICTION TONE: The morning after overnight storms. Mention drainage issues, cleanup, community response.
+
+KNOWN LIMITATION: Dense flower meadows may remain partially green. Works better on sparse vegetation or hard surfaces.
 `,
 
   windstorm: `
-## WINDSTORM — SSP3-7.0 Climate Scenario
-Storm aftermath. Focus on wind damage, NOT active wind (model cannot show motion).
+## WINDSTORM — SSP3-7.0 (LIMITED PERFORMANCE)
+Storm aftermath. Atmosphere works; physical debris does NOT reliably appear.
 
-VISUAL EFFECTS:
-- Sky: CHANGE to dark grey dramatic storm clouds, directional light
-- Debris: ADD fallen branches, scattered leaves, overturned furniture, torn fabric
-- Materials: ADD loose elements, damaged awnings, displaced objects
-- Vegetation: CHANGE plants to stripped, broken, shredded, defoliated. Bare branches, scattered petals.
-- Surfaces: ADD wet from rain, dirt/leaves stuck to walls
-- People: ADD bracing posture, holding belongings, disheveled hair/clothing
+VISUAL EFFECTS (focus on atmosphere only):
+- Sky: CHANGE to dark dramatic storm clouds. This works well.
+- Lighting: CHANGE to harsh directional light, high contrast. This works.
+- Surfaces: CHANGE to wet, darkened. Works partially.
+- Trees: CHANGE leaves to sparse, some bare branches. Inconsistent.
 
-ATMOSPHERE: Dark, dramatic, high contrast, directional light suggesting wind direction
+DO NOT REQUEST (FLUX cannot do these reliably):
+- Fallen branches or debris on ground
+- Bent or leaning trees
+- Motion blur or active wind
+- Scattered objects or overturned furniture
+- Torn awnings or damaged structures
 
-FICTION TONE: The morning after a severe storm. Mention wind speeds, damage assessment, cleanup beginning.
+ATMOSPHERE: Dark, ominous, dramatic sky, post-storm stillness
+
+FICTION TONE: The eerie calm after the storm passed. Mention wind speeds from last night, damage reports coming in.
+
+KNOWN LIMITATION: This scenario primarily delivers atmosphere change. Physical damage/debris will not appear consistently.
 `,
 
   adaptation: `
-## ADAPTATION — SSP1-2.6 Climate Scenario
-Optimistic future with successful climate adaptation. Net-zero by 2050.
+## ADAPTATION — SSP1-2.6 (LIMITED PERFORMANCE)
+Positive climate-adapted future. FLUX struggles to ADD infrastructure.
 
-VISUAL EFFECTS:
-- Sky: Keep pleasant or ADD soft clouds, comfortable daylight
-- Infrastructure: ADD visible green infrastructure (green roofs, solar panels, rain gardens)
-- Materials: Show weathered but well-maintained, sustainable materials visible
-- Vegetation: CHANGE to climate-adapted species, productive urban greening, bioswales
-- Surfaces: ADD permeable paving, water retention features
-- People: Show comfortable outdoor activity, enjoying adapted spaces
+VISUAL EFFECTS (manage expectations):
+- Sky: CHANGE to pleasant daylight, soft warm tones. Works.
+- Vegetation: CHANGE to lush, healthy, Mediterranean palette. Partially works.
+- Light: Golden hour warmth acceptable but not just a sunset filter.
 
-ATMOSPHERE: Pleasant, inviting, green-tinted, comfortable
+ASPIRATIONAL (request but don't expect):
+- Solar panels on roofs
+- Green roof sections
+- Rain gardens or bioswales
+- Permeable paving
 
-FICTION TONE: Hopeful but realistic. Mention specific adaptations, community initiatives, improved quality of life despite challenges.
+ATMOSPHERE: Pleasant, hopeful, green-tinted, inviting
+
+FICTION TONE: A comfortable Tuesday in the adapted city. Mention specific policies that worked, community gardens, improved quality of life.
+
+KNOWN LIMITATION: FLUX cannot reliably ADD complex infrastructure. Results will show atmospheric/color changes more than physical additions. The FICTION text carries the adaptation narrative more than the image.
 `
 };
 
@@ -144,6 +238,7 @@ export default async function handler(req, res) {
   const location = req.body.location || null;
   const locationContext = buildLocationContext(location);
   const scenarioGuide = scenarioInstructions[scenario] || scenarioInstructions.heatwave;
+  const promptGuidance = buildImagePromptGuidance(scenario);
 
   const systemPrompt = `You are a climate design fiction specialist for Heated Studio. You transform architectural renders and design images into plausible climate futures.
 
@@ -154,55 +249,44 @@ export default async function handler(req, res) {
 - SCIENTIFIC GROUNDING: Scenarios align with IPCC AR6 Shared Socioeconomic Pathways (SSPs)
 - HUMAN AGENCY: Always show signs of human adaptation and response
 
-## IPCC SCENARIO ALIGNMENT
-- HEATWAVE: SSP3-7.0 (intermediate-high emissions, +2.7°C by 2100)
-- FLOOD: SSP3-7.0 (increased precipitation extremes)
-- WINDSTORM: SSP3-7.0 (more intense storm events)
-- ADAPTATION: SSP1-2.6 (optimistic net-zero by 2050, successful adaptation)
+## FLUX KONTEXT CAPABILITIES (Critical - follow strictly)
+FLUX CAN reliably do:
+- Change sky/atmosphere dramatically
+- Shift color palette globally (green → brown, saturated → muted)
+- Add weather effects (haze, overcast, heat shimmer)
+- Darken/lighten and wet surfaces
+- Change lighting direction and mood
 
-## MATERIAL DEGRADATION GUIDE
-When showing climate effects on buildings, include realistic material degradation:
+FLUX CANNOT reliably do:
+- Add complex objects (debris, fallen branches, solar panels)
+- Deform geometry (bend trees, lean structures)
+- Create motion blur or active weather
+- Transform dense texture patterns (flower meadows often resist change)
+- Add or modify people
 
-CONCRETE: Cracking from thermal expansion, efflorescence (white salt stains), spalling from heat cycles, waterline marks
-BRICK/MASONRY: Efflorescence between joints, mortar erosion, thermal stress cracks at corners
-METAL: Rust/corrosion at joints and fasteners, patina on copper/bronze, paint peeling
-WOOD: Warping and checking (surface cracks), grey weathering, rot near ground contact
-GLASS: Dust/grime accumulation, water staining, seal failure (fogging)
-PAINT/RENDER: Fading and chalking from UV, peeling from moisture, algae/mold in damp areas
-
-## VEGETATION GUIDE
-HEATWAVE: Dead brown straw-colored grass, wilted leaves with brown edges, withered dried flowers, cracked dry earth
-FLOOD: Flattened waterlogged plants, matted grass with debris, mud-splattered, sediment deposits
-WINDSTORM: Stripped broken vegetation, bare branches, defoliated shrubs, scattered leaves on ground
-ADAPTATION: Climate-adapted species, green infrastructure, productive urban vegetation, healthy drought-tolerant plants
-
-## HUMAN PRESENCE
-HEATWAVE: Sun hats, UV protective clothing, water bottles, seeking shade, light colors
-FLOOD: Rain boots, umbrellas, rolled-up pants, carrying belongings, cleaning up
-WINDSTORM: Bracing against wind, holding hats, disheveled clothing, seeking shelter
-ADAPTATION: Normal comfortable activities, enjoying adapted spaces
-
-## ATMOSPHERE & LIGHTING
-HEATWAVE: Harsh sun, orange/yellow cast, heat haze, high contrast, washed out sky
-FLOOD: Overcast grey (NOT dramatic storm), wet reflective surfaces, diffused light, low saturation, muted
-WINDSTORM: Dark dramatic sky, directional light, high contrast
-ADAPTATION: Pleasant daylight, comfortable, inviting, green tones
-
-## FLUX KONTEXT SYNTAX RULES (Critical)
+## FLUX KONTEXT SYNTAX RULES
 - Use INSTRUCTIONAL verbs: "CHANGE the sky to..." / "ADD puddles" / "REPLACE grass with..."
 - NEVER use: "The image shows..." / "A scene with..." / "Depicting..."
 - Max 40 words for image prompt
-- Cannot deform geometry (no bending trees, no motion blur)
-- Cannot submerge objects in water (show waterline marks instead)
 - MUST end with: "Keep the exact same composition, camera angle, and framing."
 
 ${scenarioGuide}
+${promptGuidance}
 ${locationContext}
 
-## OUTPUT FORMAT (follow exactly)
-IMG: [Your 40-word max FLUX Kontext prompt using CHANGE/ADD/REPLACE verbs, no line breaks]
+## SCENARIO PERFORMANCE NOTES
+- HEATWAVE: Your strongest scenario. Color transformation works excellently.
+- FLOOD: Atmosphere works well. Vegetation transformation is hit-or-miss.
+- WINDSTORM: Only atmosphere/sky will change. Do not promise debris or damage in the prompt.
+- ADAPTATION: Rely on FICTION text to convey adaptation narrative. Image will show pleasant atmosphere only.
 
-FICTION: [2-3 sentences. A mundane dispatch from this future—like local news or personal observation. Be specific to THIS design. Include a concrete detail: a date, temperature, regulation, or local reference. Written in present or past tense. Hyper-local if location is known.]
+When generating the FICTION text, be specific and evocative to compensate for image limitations.
+The FICTION does the heavy lifting for scenarios where visual transformation is limited.
+
+## OUTPUT FORMAT (follow exactly)
+IMG: [Your 40-word max FLUX Kontext prompt using CHANGE/ADD verbs. Focus on atmosphere and color changes. No line breaks.]
+
+FICTION: [2-3 sentences. A mundane dispatch from this future—like local news or personal observation. Be specific to THIS design. Include a concrete detail: a date, temperature, regulation, or local reference. Written in present or past tense. Hyper-local if location is known. For limited-performance scenarios, the FICTION carries the narrative weight.]
 
 Remember: You are creating design fiction artifacts, not disaster porn. The goal is to help people imagine and prepare for climate futures, not to paralyze them with fear.`;
 
@@ -255,11 +339,10 @@ Remember: You are creating design fiction artifacts, not disaster porn. The goal
 
       console.log('=== HEATED ANALYSIS ===');
       console.log('Scenario:', scenario);
+      console.log('Expected performance:', SCENARIO_PERFORMANCE[scenario] || 'Unknown');
       console.log('Location:', location ? `${location.city}, ${location.country}` : 'Not detected');
       console.log('Prompt Word Count:', wordCount);
-      if (!validation.valid) {
-        console.log('Validation Issues:', validation.issues);
-      }
+      console.log('Validation:', validation.valid ? '✓ Valid' : `✗ Issues: ${validation.issues.join(', ')}`);
       console.log('=======================');
     }
 
