@@ -331,13 +331,13 @@ ${locationContext}
 ## OUTPUT FORMAT (follow exactly)
 IMG: [Your 40-word max FLUX Kontext prompt. Focus on SKY, ATMOSPHERE, COLOR, LIGHTING. No object additions. No line breaks.]
 
-FICTION: [2-3 sentences. This carries the FULL narrative. Describe damage, infrastructure, policies, human response—everything the image can't show. Be specific, mundane, hyper-local. Include a concrete detail: date, temperature, regulation, wind speed. The FICTION compensates for image limitations.]
+FICTION: [2-3 sentences IN ENGLISH. This carries the FULL narrative. Describe damage, infrastructure, policies, human response—everything the image can't show. Be specific, mundane, hyper-local. Include a concrete detail: date, temperature, regulation, wind speed. Always write in English regardless of location.]
 
 ## EXAMPLE OUTPUT (HEATWAVE scenario, Madrid)
 
 IMG: CHANGE sky to harsh orange haze with heat shimmer. CHANGE all grass and vegetation to dead brown straw. ADD dust to surfaces and warm desaturated tones throughout. Keep the exact same composition, camera angle, and framing.
 
-FICTION: La terraza del edificio en Calle Goya 47 permanece vacía a las 14:00, agosto 2038. La ordenanza municipal 847-C prohíbe ocupación exterior entre 12:00-17:00 cuando la temperatura supera 42°C—hoy marca 47°C. Los vecinos esperan el atardecer.
+FICTION: The rooftop terrace at Calle Goya 47 sits empty at 14:00, August 2038. Municipal ordinance 847-C prohibits outdoor occupancy between 12:00-17:00 when temperatures exceed 42°C—today it reads 47°C. Residents wait for sunset.
 
 Remember: The IMAGE shows mood and atmosphere. The FICTION tells the story.`;
 
