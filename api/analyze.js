@@ -75,6 +75,13 @@ IMPORTANT: FLUX cannot bend trees or show motion. Focus on AFTERMATH and DAMAGE:
 - WIND: Add people bracing, holding onto hats, hair and clothing disheveled
 - COMPOUND: Add face masks, adapted utilitarian clothing, carrying supplies
 
+## Location-based predictions (if LOCATION CONTEXT is provided):
+When location data is available, the FICTION should:
+- Reference the specific city/region by name
+- Include plausible local climate predictions (sea level rise for coastal cities, drought for Mediterranean, flooding for river cities, heat islands for dense urban areas)
+- Mention local landmarks, infrastructure, or cultural elements when relevant
+- Make the scenario feel grounded in that specific place, not generic
+
 ## Output format (follow exactly):
 IMG: [Your 40-word max FLUX Kontext prompt, no line breaks]
 

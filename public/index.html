@@ -149,7 +149,11 @@
         <div style="position:absolute;bottom:12px;right:12px;padding:6px 14px;background:rgba(51,43,40,0.85);backdrop-filter:blur(8px);font-size:10px;color:#a09890;font-family:'DM Mono',monospace;letter-spacing:1px">Click to replace</div>
       </div>
     </div>
-    <button id="generate-btn" class="btn" disabled onclick="runFiction()" style="width:100%;padding:20px;font-size:12px;font-weight:500;letter-spacing:4px;text-transform:uppercase;background:#3d342f;color:#6b6058">Generate fiction</button>
+    <div id="location-badge" style="display:none;margin-top:12px;padding:10px 16px;background:rgba(253,207,164,0.05);border:1px solid rgba(253,207,164,0.1);display:flex;align-items:center;gap:8px">
+      <span style="font-size:14px">📍</span>
+      <span id="location-text" class="mono" style="font-size:11px;color:#a09890;letter-spacing:1px"></span>
+    </div>
+    <button id="generate-btn" class="btn" disabled onclick="runFiction()" style="width:100%;padding:20px;font-size:12px;font-weight:500;letter-spacing:4px;text-transform:uppercase;background:#3d342f;color:#6b6058;margin-top:24px">Generate fiction</button>
   </div>
 
   <div id="step-3" class="step" style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:100px 48px">
@@ -202,6 +206,7 @@
     </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/exif-js"></script>
   <script>
     const SCENARIOS = [
       {
@@ -232,7 +237,7 @@
       { tag: "Prototyping", name: "Speculative Design & AI", duration: "4 weeks", desc: "Collaborative storytelling and rapid prototyping. Functional artefacts from possible futures you can hold, test, and learn from.", who: "Organizations beyond traditional planning" }
     ];
 
-    let currentStep = 0, selectedScenario = null, uploadedDataUrl = null, imageBase64 = null, imageMediaType = "image/jpeg", generatedPrompt = "";
+    let currentStep = 0, selectedScenario = null, uploadedDataUrl = null, imageBase64 = null, imageMediaType = "image/jpeg", generatedPrompt = "", locationData = null;
 
     function goStep(n) {
       document.querySelectorAll(".step").forEach(el => { el.classList.remove("active"); el.style.display = "none"; });
@@ -251,9 +256,14 @@
       imageBase64 = null;
       imageMediaType = "image/jpeg";
       generatedPrompt = "";
+      locationData = null;
 
       // Clear file input
       document.getElementById("file-input").value = "";
+
+      // Clear location badge
+      document.getElementById("location-badge").style.display = "none";
+      document.getElementById("location-text").textContent = "";
 
       // Reset upload zone
       document.getElementById("upload-placeholder").style.display = "block";
@@ -312,7 +322,48 @@
     uploadZone.ondrop = (e) => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f && f.type.startsWith("image/")) handleFile(f); };
     fileInput.onchange = (e) => { if (e.target.files[0]) handleFile(e.target.files[0]); };
 
-    function handleFile(file) {
+    function extractExifLocation(file) {
+      return new Promise((resolve) => {
+        EXIF.getData(file, function() {
+          const lat = EXIF.getTag(this, "GPSLatitude");
+          const latRef = EXIF.getTag(this, "GPSLatitudeRef");
+          const lon = EXIF.getTag(this, "GPSLongitude");
+          const lonRef = EXIF.getTag(this, "GPSLongitudeRef");
+          if (lat && lon) {
+            const latDecimal = (lat[0] + lat[1]/60 + lat[2]/3600) * (latRef === "S" ? -1 : 1);
+            const lonDecimal = (lon[0] + lon[1]/60 + lon[2]/3600) * (lonRef === "W" ? -1 : 1);
+            resolve({ lat: latDecimal, lon: lonDecimal });
+          } else {
+            resolve(null);
+          }
+        });
+      });
+    }
+
+    async function getCityFromCoords(lat, lon) {
+      try {
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`,
+          { headers: { "User-Agent": "HeatedStudio/1.0" } }
+        );
+        const data = await response.json();
+        return {
+          city: data.address.city || data.address.town || data.address.village || data.address.municipality,
+          country: data.address.country,
+          state: data.address.state
+        };
+      } catch (e) {
+        console.error("Geocoding failed:", e);
+        return null;
+      }
+    }
+
+    async function handleFile(file) {
+      // Reset location
+      locationData = null;
+      document.getElementById("location-badge").style.display = "none";
+
+      // Read file as data URL
       const r = new FileReader();
       r.onload = (ev) => {
         uploadedDataUrl = ev.target.result;
@@ -325,6 +376,23 @@
         const b = document.getElementById("generate-btn"); b.disabled = false; b.style.background = selectedScenario.color; b.style.color = "#332b28";
       };
       r.readAsDataURL(file);
+
+      // Extract EXIF location (async, don't block UI)
+      try {
+        const coords = await extractExifLocation(file);
+        if (coords) {
+          console.log("EXIF coords:", coords);
+          const location = await getCityFromCoords(coords.lat, coords.lon);
+          if (location && location.city) {
+            locationData = location;
+            document.getElementById("location-text").textContent = location.city + ", " + location.country;
+            document.getElementById("location-badge").style.display = "flex";
+            console.log("Location detected:", locationData);
+          }
+        }
+      } catch (e) {
+        console.log("No EXIF location found:", e);
+      }
     }
 
     async function runFiction() {
@@ -333,6 +401,12 @@
       setLoading("Reading your design...");
       try {
         setLoading("Imagining the future...");
+        // Build prompt with location context if available
+        let userPrompt = selectedScenario.prompt;
+        if (locationData && locationData.city) {
+          userPrompt += `\n\nLOCATION CONTEXT: This design is located in ${locationData.city}, ${locationData.country}${locationData.state ? ", " + locationData.state : ""}. Make the fiction specific to this place.`;
+        }
+
         const res = await fetch("/api/analyze", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -341,7 +415,7 @@
             max_tokens: 1000,
             messages: [{ role: "user", content: [
               { type: "image", source: { type: "base64", media_type: imageMediaType, data: imageBase64 } },
-              { type: "text", text: selectedScenario.prompt }
+              { type: "text", text: userPrompt }
             ]}]
           })
         })
