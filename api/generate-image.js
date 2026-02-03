@@ -1,5 +1,27 @@
+// Simple rate limiting (resets on cold start)
+const rateLimit = new Map();
+const RATE_LIMIT = 20;
+const RATE_WINDOW = 60000;
+
+function checkRateLimit(ip) {
+  const now = Date.now();
+  const userRequests = rateLimit.get(ip) || [];
+  const recent = userRequests.filter(time => now - time < RATE_WINDOW);
+  if (recent.length >= RATE_LIMIT) return false;
+  recent.push(now);
+  rateLimit.set(ip, recent);
+  return true;
+}
+
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
+
+  // Rate limiting
+  const ip = req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || 'unknown';
+  if (!checkRateLimit(ip)) {
+    return res.status(429).json({ error: "Too many requests. Please wait a minute." });
+  }
+
   const FAL_KEY = process.env.FAL_KEY;
   if (!FAL_KEY) return res.status(500).json({ error: "FAL_KEY not set" });
 

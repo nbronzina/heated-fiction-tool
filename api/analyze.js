@@ -1,3 +1,22 @@
+// Simple rate limiting (resets on cold start, sufficient for casual abuse prevention)
+const rateLimit = new Map();
+const RATE_LIMIT = 20; // requests per minute per IP
+const RATE_WINDOW = 60000; // 1 minute
+
+function checkRateLimit(ip) {
+  const now = Date.now();
+  const userRequests = rateLimit.get(ip) || [];
+  const recent = userRequests.filter(time => now - time < RATE_WINDOW);
+
+  if (recent.length >= RATE_LIMIT) {
+    return false;
+  }
+
+  recent.push(now);
+  rateLimit.set(ip, recent);
+  return true;
+}
+
 // Detect media type from base64 header bytes
 function getMediaTypeFromBase64(base64String) {
   if (base64String.startsWith('/9j/')) return 'image/jpeg';
@@ -232,6 +251,12 @@ FICTION TONE: The FICTION carries ALL the adaptation narrative. Describe the pol
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
+  // Rate limiting
+  const ip = req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || 'unknown';
+  if (!checkRateLimit(ip)) {
+    return res.status(429).json({ error: "Too many requests. Please wait a minute." });
+  }
+
   const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
   if (!ANTHROPIC_API_KEY) return res.status(500).json({ error: "API key not set" });
 
@@ -283,6 +308,12 @@ ${locationContext}
 IMG: [Your 40-word max FLUX Kontext prompt. Focus on SKY, ATMOSPHERE, COLOR, LIGHTING. No object additions. No line breaks.]
 
 FICTION: [2-3 sentences. This carries the FULL narrative. Describe damage, infrastructure, policies, human response—everything the image can't show. Be specific, mundane, hyper-local. Include a concrete detail: date, temperature, regulation, wind speed. The FICTION compensates for image limitations.]
+
+## EXAMPLE OUTPUT (HEATWAVE scenario, Madrid)
+
+IMG: CHANGE sky to harsh orange haze with heat shimmer. CHANGE all grass and vegetation to dead brown straw. ADD dust to surfaces and warm desaturated tones throughout. Keep the exact same composition, camera angle, and framing.
+
+FICTION: La terraza del edificio en Calle Goya 47 permanece vacía a las 14:00, agosto 2038. La ordenanza municipal 847-C prohíbe ocupación exterior entre 12:00-17:00 cuando la temperatura supera 42°C—hoy marca 47°C. Los vecinos esperan el atardecer.
 
 Remember: The IMAGE shows mood and atmosphere. The FICTION tells the story.`;
 

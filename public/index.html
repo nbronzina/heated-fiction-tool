@@ -90,6 +90,51 @@
     .progress-dots .dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,245,234,0.2); transition: background 0.3s; }
     .progress-dots .dot.active { background: #fdcfa4; }
     .gen-error { padding: 24px; border: 1px solid #E8572A; background: rgba(232,87,42,0.1); text-align: center; color: #fff5ea; margin-top: 20px; }
+    .fiction-dispatch {
+      background: rgba(253, 207, 164, 0.04);
+      border-left: 3px solid #fdcfa4;
+      padding: 24px 28px;
+      font-family: 'DM Serif Display', serif;
+      display: none;
+    }
+    .fiction-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+    }
+    .fiction-label { color: #fdcfa4; }
+    .fiction-location { color: #7a706a; }
+    .fiction-dispatch p {
+      font-size: 18px;
+      line-height: 1.7;
+      color: #e8e0d8;
+      margin: 0;
+      font-style: italic;
+    }
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(100%);
+      background: #fdcfa4;
+      color: #332b28;
+      padding: 14px 28px;
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      letter-spacing: 2px;
+      opacity: 0;
+      transition: all 0.3s ease;
+      z-index: 1000;
+    }
+    .toast.visible {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
     @media (max-width: 768px) {
       .results-grid { grid-template-columns: 1fr; }
       .results-grid img { max-height: 60vh; }
@@ -183,6 +228,14 @@
       </div>
     </div>
 
+    <div id="fiction-container" class="fiction-dispatch" style="max-width:1100px;margin:0 auto;margin-top:2px">
+      <div class="fiction-header">
+        <span class="fiction-label">Dispatch from the future</span>
+        <span class="fiction-location" id="fiction-location"></span>
+      </div>
+      <p id="fiction-text"></p>
+    </div>
+
     <div style="max-width:1100px;margin:0 auto;padding:32px 48px;display:flex;gap:16px">
       <button class="btn btn-ghost" onclick="resetAll()" style="flex:1">New fiction</button>
       <button class="btn btn-ghost" onclick="downloadImage()" style="flex:1">Download image</button>
@@ -234,7 +287,19 @@
       }
     ];
 
-    let currentStep = 0, selectedScenario = null, uploadedDataUrl = null, imageBase64 = null, imageMediaType = "image/jpeg", generatedPrompt = "", locationData = null, originalWidth = null, originalHeight = null;
+    let currentStep = 0, selectedScenario = null, uploadedDataUrl = null, imageBase64 = null, imageMediaType = "image/jpeg", generatedPrompt = "", generatedFiction = "", locationData = null, originalWidth = null, originalHeight = null;
+
+    function showToast(message, duration = 3000) {
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.textContent = message;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.classList.add('visible'), 10);
+      setTimeout(() => {
+        toast.classList.remove('visible');
+        setTimeout(() => toast.remove(), 300);
+      }, duration);
+    }
 
     function goStep(n) {
       document.querySelectorAll(".step").forEach(el => { el.classList.remove("active"); el.style.display = "none"; });
@@ -253,6 +318,7 @@
       imageBase64 = null;
       imageMediaType = "image/jpeg";
       generatedPrompt = "";
+      generatedFiction = "";
       locationData = null;
       originalWidth = null;
       originalHeight = null;
@@ -277,12 +343,15 @@
       b.style.background = "#3d342f";
       b.style.color = "#6b6058";
 
-      // Clear result images
+      // Clear result images and fiction
       document.getElementById("result-original").src = "";
       document.getElementById("result-generated").src = "";
       document.getElementById("result-generated").style.display = "none";
       document.getElementById("gen-shimmer").style.display = "none";
       document.getElementById("watermark").style.display = "none";
+      document.getElementById("fiction-container").style.display = "none";
+      document.getElementById("fiction-text").textContent = "";
+      document.getElementById("fiction-location").textContent = "";
       const genError = document.getElementById("gen-error");
       if (genError) genError.remove();
 
@@ -443,6 +512,11 @@
         imgPrompt = imgPrompt.replace(/\*+/g, '').trim();
         console.log("IMG PROMPT:", imgPrompt);
         generatedPrompt = imgPrompt;
+
+        // Parse FICTION text
+        const fictionMatch = text.match(/FICTION:\s*\n?([\s\S]*?)$/i);
+        generatedFiction = fictionMatch ? fictionMatch[1].trim().replace(/\*+/g, '') : "";
+        console.log("FICTION:", generatedFiction);
         renderResults();
         goStep(4);
         if (imgPrompt) {
@@ -533,6 +607,13 @@
       document.getElementById("gen-shimmer").style.display = "none";
       const img = document.getElementById("result-generated"); img.src = blobUrl; img.style.display = "block";
       document.getElementById("watermark").style.display = "block";
+
+      // Show FICTION text
+      if (generatedFiction) {
+        document.getElementById("fiction-text").textContent = generatedFiction;
+        document.getElementById("fiction-location").textContent = locationData ? locationData.city + ", " + locationData.country : selectedScenario.location;
+        document.getElementById("fiction-container").style.display = "block";
+      }
     }
 
     async function downloadImage() {
@@ -593,6 +674,7 @@
 
           btn.textContent = originalText;
           btn.disabled = false;
+          showToast("Image downloaded");
         }, "image/jpeg", 0.95);
       } catch (err) {
         console.error("Download failed:", err);
