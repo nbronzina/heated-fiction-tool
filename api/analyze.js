@@ -237,28 +237,49 @@ FICTION TONE: The FICTION describes the aftermath and damage. "The storm that hi
 `,
 
   adaptation: `
-## ADAPTATION — SSP1-2.6 (POSITIVE SCENARIO ⭐⭐⭐⭐)
-This is a SUCCESS story. Show a PLEASANT, THRIVING environment.
+⚠️ CRITICAL INSTRUCTION FOR ADAPTATION SCENARIO ⚠️
 
-CRITICAL: This is NOT a crisis scenario. NO haze, NO orange sky, NO apocalyptic tones.
+This is the ONLY positive scenario. It shows a SUCCESSFUL future where adaptation WORKED.
+Life is BETTER, not worse. Comfort, not coping.
 
-VISUAL EFFECTS (reliable):
-- Sky: CHANGE to CLEAR pleasant blue sky with soft white clouds. NO haze, NO orange.
-- Light: CHANGE to soft natural daylight or gentle warm afternoon light. NOT harsh, NOT orange.
-- Vegetation: CHANGE to lush, vibrant, healthy deep green. Thriving plants.
-- Atmosphere: MAKE fresh, clear, comfortable, inviting
-- Colors: Fresh greens, clean blues, natural warm tones. NO sepia, NO orange filter.
+## FICTION: WHAT TO WRITE
 
-AVOID COMPLETELY:
-- Orange or amber sky tones
-- Haze, dust, or pollution
-- Heat shimmer or distortion
-- Apocalyptic or stressed atmosphere
-- Solar panels, green roofs (FLUX cannot add objects)
+DO NOT write about:
+- Blinds staying down
+- Air quality problems
+- Heat alerts or protocols
+- Checking forecasts anxiously
+- Restricted outdoor time
+- Constant ventilation needs
+- Any form of suffering, limitation, or discomfort
 
-ATMOSPHERE: Fresh, pleasant, green, thriving — a beautiful day in a well-adapted city
+DO write about:
+- Open windows, fresh air flowing
+- Comfortable outdoor dining
+- Kids playing outside freely
+- Green infrastructure working as designed
+- "The retrofit was worth it"
+- Life that feels BETTER than today
+- Neighbors enjoying shared spaces
+- Successful community decisions
 
-FICTION TONE: The FICTION describes the SUCCESS. What policies worked? What community solutions? How did quality of life improve? This is a hopeful story of adaptation done right.
+## IMAGE: VISUAL EFFECTS
+
+MUST show IMPROVEMENT over original. Greener, fresher, more pleasant.
+
+- Sky: CLEAR blue sky, soft white clouds. NEVER haze, NEVER orange.
+- Light: Soft pleasant daylight. NEVER harsh, NEVER amber/sepia.
+- Vegetation: Lush, vibrant, healthy GREEN. Thriving.
+- Atmosphere: Fresh, inviting, comfortable.
+- Colors: Greens, blues, natural tones. NO orange filter.
+
+NEVER use these words in IMG prompt: haze, shimmer, harsh, scorching, dust, amber, sepia, orange
+
+## EXAMPLE ADAPTATION OUTPUT
+
+IMG: ENHANCE vegetation to lush vibrant green. CHANGE sky to clear pleasant blue with soft clouds. CHANGE lighting to soft comfortable daylight. MAKE atmosphere fresh and inviting. Keep the exact same composition, camera angle, and framing.
+
+FICTION: The courtyard retrofit finally pays off—three degrees cooler than the street, even in August. Marta's kids do homework at the outdoor table now. The building committee voted to expand the green wall to the east facade next spring.
 `
 };
 
