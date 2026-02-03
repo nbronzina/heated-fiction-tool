@@ -160,14 +160,7 @@ DO NOT request: debris, fallen branches, damage, scattered objects. FLUX cannot 
 The IMAGE shows the threat; the FICTION describes the damage.
 Success rate: 85%+ for dramatic sky/atmosphere.
 `,
-    adaptation: `
-PROMPT STRATEGY: Focus on CLEAR, FRESH, GREEN palette. NO golden/amber/orange tones.
-Use: "CHANGE sky to clear blue", "ENHANCE vegetation to lush vibrant green", "MAKE atmosphere fresh and pleasant"
-DO NOT request: solar panels, green roofs, bioswales, infrastructure. FLUX cannot add objects.
-DO NOT use: golden, amber, orange, haze, sepia - these make it look like a crisis scenario.
-The IMAGE shows a thriving future; the FICTION describes the policies and infrastructure.
-Success rate: 75%+ for color/mood transformation.
-`
+    adaptation: `Use: "CHANGE sky to clear blue", "ENHANCE vegetation to green", "MAKE atmosphere fresh". NO orange/amber/haze.`
   };
 
   return guidance[scenario] || '';
@@ -239,49 +232,23 @@ FICTION TONE: The FICTION describes the aftermath and damage. "The storm that hi
 `,
 
   adaptation: `
-⚠️ CRITICAL INSTRUCTION FOR ADAPTATION SCENARIO ⚠️
+## ADAPTATION — THE POSITIVE SCENARIO
 
-This is the ONLY positive scenario. It shows a SUCCESSFUL future where adaptation WORKED.
-Life is BETTER, not worse. Comfort, not coping.
+This shows a SUCCESSFUL future. Life is BETTER, not worse.
 
-## FICTION: WHAT TO WRITE
+IMAGE:
+- Clear blue sky, soft clouds
+- Lush vibrant green vegetation
+- Fresh, pleasant atmosphere
+- NEVER: orange, haze, amber, sepia, brown
 
-DO NOT write about:
-- Blinds staying down
-- Air quality problems
-- Heat alerts or protocols
-- Checking forecasts anxiously
-- Restricted outdoor time
-- Constant ventilation needs
-- Any form of suffering, limitation, or discomfort
+FICTION:
+- Success story: "retrofit worked", kids playing outside, open windows
+- NEVER: crisis, alerts, air quality problems, restrictions
 
-DO write about:
-- Open windows, fresh air flowing
-- Comfortable outdoor dining
-- Kids playing outside freely
-- Green infrastructure working as designed
-- "The retrofit was worth it"
-- Life that feels BETTER than today
-- Neighbors enjoying shared spaces
-- Successful community decisions
-
-## IMAGE: VISUAL EFFECTS
-
-MUST show IMPROVEMENT over original. Greener, fresher, more pleasant.
-
-- Sky: CLEAR blue sky, soft white clouds. NEVER haze, NEVER orange.
-- Light: Soft pleasant daylight. NEVER harsh, NEVER amber/sepia.
-- Vegetation: Lush, vibrant, healthy GREEN. Thriving.
-- Atmosphere: Fresh, inviting, comfortable.
-- Colors: Greens, blues, natural tones. NO orange filter.
-
-NEVER use these words in IMG prompt: haze, shimmer, harsh, scorching, dust, amber, sepia, orange
-
-## EXAMPLE ADAPTATION OUTPUT
-
-IMG: ENHANCE vegetation to lush vibrant green. CHANGE sky to clear pleasant blue with soft clouds. CHANGE lighting to soft comfortable daylight. MAKE atmosphere fresh and inviting. Keep the exact same composition, camera angle, and framing.
-
-FICTION: The courtyard retrofit finally pays off—three degrees cooler than the street, even in August. Marta's kids do homework at the outdoor table now. The building committee voted to expand the green wall to the east facade next spring.
+EXAMPLE:
+IMG: CHANGE sky to clear blue with soft clouds. ENHANCE vegetation to lush vibrant green. MAKE atmosphere fresh and inviting. Keep same composition.
+FICTION: The courtyard retrofit pays off—three degrees cooler. Kids do homework outside now.
 `
 };
 
@@ -313,7 +280,7 @@ const scenarioSuffix = {
   heatwave: `\n\n🔴 FINAL CHECK: Heatwave = orange sky + dead vegetation + heat details in fiction.`,
   flood: `\n\n🔴 FINAL CHECK: Flood = grey sky + wet surfaces + post-rain mundane fiction.`,
   windstorm: `\n\n🔴 FINAL CHECK: Windstorm = dramatic dark sky + ominous + storm aftermath fiction.`,
-  adaptation: `\n\n🔴 FINAL CHECK: Adaptation = BLUE sky + GREEN plants + SUCCESS story. If you wrote orange/haze/crisis = WRONG, redo.`
+  adaptation: ``
 };
 
 export default async function handler(req, res) {
@@ -412,10 +379,7 @@ WINDSTORM:
 - Moderate: threatening sky, strong directional light
 - Mild: dynamic cloudy sky, visible breeze in vegetation
 
-ADAPTATION (always positive, NEVER hazy/orange):
-- Intense: lush vibrant vegetation, clear blue sky, beautiful day
-- Moderate: healthy green vegetation, pleasant clear atmosphere
-- Mild: subtle green improvements, calm fresh atmosphere
+ADAPTATION: Always positive — clear blue sky, lush green, pleasant atmosphere (no intensity levels, always success)
 
 Rule: Minor inconvenience = mild visual. Latent tension = moderate. Bureaucratic protocol = intense OR mild depending on context.
 
@@ -449,8 +413,8 @@ IMG: CHANGE sky to flat grey overcast. MAKE all ground surfaces wet and reflecti
 FICTION: Water marks on the pharmacy wall—third set this year, María notes on her way to work. The sandbags by the door stay out permanently now.
 
 Adaptation (success):
-IMG: CHANGE sky to clear pleasant blue with soft white clouds. ENHANCE vegetation to lush vibrant green. MAKE atmosphere fresh, bright, and inviting. Keep the exact same composition, camera angle, and framing.
-FICTION: The green corridor keeps this block five degrees cooler. Kids actually play outside again. Someone on the planning committee got it right.
+IMG: CHANGE sky to clear blue. ENHANCE vegetation to lush green. MAKE atmosphere fresh. Keep same composition.
+FICTION: The green corridor keeps this block cooler. Kids play outside again.
 
 Remember: Vary the register. Some days are just... different now.` + (scenarioSuffix[scenario] || '');
 
