@@ -284,6 +284,37 @@ FICTION: The courtyard retrofit finally pays off—three degrees cooler than the
 `
 };
 
+// Scenario-specific reminders to inject into user message (reinforces system prompt)
+const scenarioReminders = {
+  heatwave: `⚠️ HEATWAVE SCENARIO:
+- Image: Orange/amber sky, dead brown vegetation, heat haze, harsh light
+- Fiction: Heat protocols, shade-seeking, adjusted routines, specific temperatures
+- Mundane tone: "A hot Tuesday", not apocalypse`,
+
+  flood: `⚠️ FLOOD SCENARIO:
+- Image: Grey overcast sky, wet surfaces, puddles, muted colors
+- Fiction: Post-rain cleanup, drainage issues, community response
+- Mundane tone: "Morning after storms", not disaster movie`,
+
+  windstorm: `⚠️ WINDSTORM SCENARIO:
+- Image: Dark dramatic sky, ominous atmosphere, high contrast
+- Fiction: Storm warnings, early closures, crews assessing
+- Mundane tone: "Storm passed through", not destruction`,
+
+  adaptation: `⚠️ ADAPTATION SCENARIO - THE ONLY POSITIVE ONE:
+- Image: CLEAR BLUE SKY, lush GREEN vegetation, pleasant soft light. NO orange, NO haze, NO brown.
+- Fiction: SUCCESS story only. Comfort, "the retrofit worked", kids playing outside, open windows.
+- DO NOT write about: crisis, alerts, air quality problems, blinds down, restricted time outside.`
+};
+
+// Final check suffix for system prompt
+const scenarioSuffix = {
+  heatwave: `\n\n🔴 FINAL CHECK: Heatwave = orange sky + dead vegetation + heat details in fiction.`,
+  flood: `\n\n🔴 FINAL CHECK: Flood = grey sky + wet surfaces + post-rain mundane fiction.`,
+  windstorm: `\n\n🔴 FINAL CHECK: Windstorm = dramatic dark sky + ominous + storm aftermath fiction.`,
+  adaptation: `\n\n🔴 FINAL CHECK: Adaptation = BLUE sky + GREEN plants + SUCCESS story. If you wrote orange/haze/crisis = WRONG, redo.`
+};
+
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
@@ -420,10 +451,13 @@ Adaptation (success):
 IMG: ADD warm golden hour lighting with slight haze. MAKE greens more vibrant and lush. CHANGE atmosphere to hopeful amber tones. Keep the exact same composition, camera angle, and framing.
 FICTION: The green corridor keeps this block five degrees cooler. Kids actually play outside again. Someone on the planning committee got it right.
 
-Remember: Vary the register. Some days are just... different now.`;
+Remember: Vary the register. Some days are just... different now.` + (scenarioSuffix[scenario] || '');
 
   try {
-    // Fix media types in image content blocks
+    // Get scenario reminder for user message
+    const reminder = scenarioReminders[scenario] || '';
+
+    // Fix media types in image content blocks AND inject scenario reminder into text
     const messages = (req.body.messages || []).map(msg => ({
       ...msg,
       content: (msg.content || []).map(block => {
@@ -435,6 +469,13 @@ Remember: Vary the register. Some days are just... different now.`;
               ...block.source,
               media_type: detectedType
             }
+          };
+        }
+        // Inject scenario reminder into user text message
+        if (block.type === 'text' && reminder) {
+          return {
+            ...block,
+            text: `${reminder}\n\n${block.text}`
           };
         }
         return block;
