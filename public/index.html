@@ -181,6 +181,54 @@
       .footer-bar { flex-direction: column; gap: 12px; text-align: center; }
       .step { padding: 80px 24px 60px !important; }
       .btn-ghost, #nav-reset { padding: 12px 20px; min-height: 44px; }
+
+      /* Share buttons touch target (44px minimum) */
+      .share-btn {
+        width: 44px;
+        height: 44px;
+      }
+
+      /* Step 0 footer columns stack */
+      #step-0 > div:last-child {
+        flex-direction: column;
+        gap: 24px;
+        padding-top: 40px;
+      }
+
+      /* Action buttons stack vertically */
+      .action-buttons {
+        flex-direction: column;
+        padding: 24px 16px !important;
+      }
+      .action-buttons .btn,
+      .action-buttons a.btn {
+        flex: none !important;
+        width: 100%;
+      }
+
+      /* Consistent horizontal padding in step-4 */
+      .step-4-section {
+        padding-left: 16px !important;
+        padding-right: 16px !important;
+      }
+
+      /* Footer links wrap */
+      .footer-bar > div:last-child {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 12px 20px;
+      }
+
+      /* Toast max-width */
+      .toast {
+        max-width: calc(100vw - 32px);
+        text-align: center;
+      }
+
+      /* Small text readability */
+      .mono.dim {
+        font-size: 11px;
+      }
     }
   </style>
 </head>
@@ -249,7 +297,7 @@
   </div>
 
   <div id="step-4" class="step" style="min-height:100vh;padding:100px 0 80px">
-    <div style="max-width:1100px;margin:0 auto 24px;padding:0 48px">
+    <div class="step-4-section" style="max-width:1100px;margin:0 auto 24px;padding:0 48px">
       <div class="progress-dots"><span class="dot active"></span><span class="dot active"></span><span class="dot active"></span></div>
       <p class="mono dim" style="font-size:10px;letter-spacing:4px;text-transform:uppercase;margin-top:12px">Step 03</p>
     </div>
@@ -268,7 +316,7 @@
       </div>
     </div>
 
-    <div id="fiction-container" class="fiction-dispatch" style="max-width:1100px;margin:0 auto;margin-top:2px">
+    <div id="fiction-container" class="fiction-dispatch step-4-section" style="max-width:1100px;margin:0 auto;margin-top:2px">
       <div class="fiction-header">
         <span class="fiction-label">Dispatch from the future</span>
         <span class="fiction-location" id="fiction-location"></span>
@@ -290,14 +338,14 @@
       </div>
     </div>
 
-    <div style="max-width:1100px;margin:0 auto;padding:32px 48px;display:flex;gap:16px">
+    <div class="action-buttons" style="max-width:1100px;margin:0 auto;padding:32px 48px;display:flex;gap:16px">
       <button class="btn btn-ghost" onclick="retryGeneration()" style="flex:1">Retry</button>
       <button class="btn btn-ghost" onclick="resetAll()" style="flex:1">New fiction</button>
       <button class="btn btn-ghost" onclick="downloadImage()" style="flex:1">Download image</button>
       <a href="https://calendly.com/indiantinker/quick-chat" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="flex:1;text-align:center;text-decoration:none;font-size:11px">Commission a project →</a>
     </div>
 
-    <div style="max-width:1100px;margin:0 auto;padding:64px 48px 0">
+    <div class="step-4-section" style="max-width:1100px;margin:0 auto;padding:64px 48px 0">
       <div style="border-top:1px solid rgba(253,207,164,0.06);padding-top:48px">
         <p class="mono dim" style="font-size:10px;letter-spacing:4px;text-transform:uppercase;margin-bottom:16px">Want to go deeper?</p>
         <p class="light" style="font-size:15px;line-height:1.8;max-width:500px;margin-bottom:24px">We create artefacts from the near future—using design fiction and AI to help organizations make resilient decisions in an uncertain climate.</p>
@@ -305,7 +353,7 @@
       </div>
     </div>
 
-    <div class="footer-bar" style="max-width:1100px;margin:80px auto 0;padding:32px 48px 0;border-top:1px solid rgba(253,207,164,0.06);display:flex;justify-content:space-between;align-items:center">
+    <div class="footer-bar step-4-section" style="max-width:1100px;margin:80px auto 0;padding:32px 48px 0;border-top:1px solid rgba(253,207,164,0.06);display:flex;justify-content:space-between;align-items:center">
       <span class="mono deep" style="font-size:11px;letter-spacing:3px">HEATED STUDIO</span>
       <span class="deep" style="font-size:11px">Calle de Goya 47, Madrid</span>
       <div style="display:flex;gap:20px">
