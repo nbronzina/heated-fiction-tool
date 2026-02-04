@@ -448,8 +448,8 @@
       });
     }
 
-    // Compress image before converting to base64
-    function compressImage(file, maxWidth = 1600, quality = 0.8) {
+    // Compress image before converting to base64 (aggressive for mobile)
+    function compressImage(file, maxWidth = 1200, quality = 0.7) {
       return new Promise((resolve) => {
         const reader = new FileReader();
         reader.onload = (e) => {
@@ -465,6 +465,13 @@
               width = maxWidth;
             }
 
+            // Also limit height
+            const maxHeight = 1200;
+            if (height > maxHeight) {
+              width = Math.round((width * maxHeight) / height);
+              height = maxHeight;
+            }
+
             canvas.width = width;
             canvas.height = height;
             const ctx = canvas.getContext('2d');
@@ -473,6 +480,8 @@
             // Always export as JPEG for maximum compression
             const dataUrl = canvas.toDataURL('image/jpeg', quality);
             const base64 = dataUrl.split(',')[1];
+
+            console.log(`Compressed: ${img.width}x${img.height} → ${width}x${height}, ${Math.round(base64.length / 1024)}KB`);
             resolve({ base64, mediaType: 'image/jpeg', dataUrl });
           };
           img.src = e.target.result;
@@ -569,6 +578,20 @@
       }
     }
 
+    // Helper to safely parse JSON responses
+    async function safeJsonParse(response) {
+      const text = await response.text();
+      try {
+        return JSON.parse(text);
+      } catch (e) {
+        console.error("JSON parse error, raw response:", text.substring(0, 200));
+        if (response.status === 413) {
+          throw new Error("Image too large. Please try a smaller image.");
+        }
+        throw new Error(`Server error (${response.status}): ${text.substring(0, 100)}`);
+      }
+    }
+
     async function runFiction() {
       if (!imageBase64 || !selectedScenario) return;
       goStep(3);
@@ -583,7 +606,7 @@
             scenario: selectedScenario.label.toLowerCase()
           })
         });
-        const promptData = await promptRes.json();
+        const promptData = await safeJsonParse(promptRes);
         if (!promptData.success) throw new Error(promptData.error || "Failed to build prompt");
 
         const imgPrompt = promptData.prompt;
@@ -607,7 +630,7 @@
             mimeType: imageMediaType
           })
         });
-        const imgData = await imgRes.json();
+        const imgData = await safeJsonParse(imgRes);
         console.log("Gemini response:", imgData.success ? "success" : imgData.error);
 
         if (!imgData.success || !imgData.imageBase64) {
@@ -645,7 +668,7 @@
           })
         });
 
-        const fictionData = await fictionRes.json();
+        const fictionData = await safeJsonParse(fictionRes);
         if (fictionData.error) {
           console.error("Fiction error:", fictionData.error);
           // Show image without fiction
@@ -714,7 +737,7 @@
             scenario: selectedScenario.label.toLowerCase()
           })
         });
-        const promptData = await promptRes.json();
+        const promptData = await safeJsonParse(promptRes);
         if (!promptData.success) throw new Error(promptData.error || "Failed to build prompt");
 
         const imgPrompt = promptData.prompt;
@@ -732,7 +755,7 @@
             mimeType: imageMediaType
           })
         });
-        const imgData = await imgRes.json();
+        const imgData = await safeJsonParse(imgRes);
         console.log("Retry Gemini response:", imgData.success ? "success" : imgData.error);
 
         if (!imgData.success || !imgData.imageBase64) {
@@ -769,7 +792,7 @@
           })
         });
 
-        const fictionData = await fictionRes.json();
+        const fictionData = await safeJsonParse(fictionRes);
         if (fictionData.error) {
           console.error("Fiction error:", fictionData.error);
           return;
