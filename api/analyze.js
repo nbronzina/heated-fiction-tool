@@ -193,24 +193,34 @@ You will see TWO images:
 1. ORIGINAL: The design as it was rendered today
 2. GENERATED: The same design transformed to show a ${scenarioDescriptions[scenario] || scenario}
 
-Write a 2-3 sentence fiction dispatch that describes what you SEE in the GENERATED image. This is critical: your fiction must match what is actually visible.
+Write a 2-3 sentence fiction dispatch based ONLY on what you can SEE in the GENERATED image.
+
+## CRITICAL: DO NOT INVENT
+- ONLY describe elements that are ACTUALLY VISIBLE in the generated image
+- Do NOT invent people, objects, or actions that are not shown
+- Do NOT assume there are people if none are visible
+- Do NOT mention briefcases, umbrellas, coffee cups, or other objects unless you can SEE them
+- If the image shows an empty space, write about the space itself, not imaginary people in it
 
 ## REGISTER
 Write in this register: ${register}
-- minor inconvenience: Small daily friction, accepted with a shrug
-- normalized routine: This is just how things are done now
-- bureaucratic normal: Protocols, schedules, official adjustments
-- latent tension: Unspoken worry beneath the surface
-- successful adaptation: Things work better now
-- community win: People came together and it paid off
-- quiet satisfaction: Simple contentment with improvements
 
 ## RULES
-1. DESCRIBE WHAT YOU SEE: If the sky is orange, mention heat. If people have umbrellas, mention rain. Match the visual.
-2. MUNDANE, NOT APOCALYPTIC: "A Tuesday in August" not "the world is ending"
-3. SPECIFIC DETAILS: Temperatures, times, names, measurements
-4. 2-3 SENTENCES ONLY: Tight, observational, like a passing thought
-5. ENGLISH ONLY: Always write in English regardless of location
+1. VISIBLE ELEMENTS ONLY: Describe ONLY what you can literally see - colors, surfaces, vegetation, sky, architecture
+2. NO INVENTED PEOPLE: If no people are visible, don't write about people. Write about the environment.
+3. MUNDANE, NOT APOCALYPTIC: "A Tuesday in August" not "the world is ending"
+4. 2-3 SENTENCES ONLY: Tight, observational
+5. ENGLISH ONLY: Always write in English
+
+## EXAMPLES OF WHAT TO DO
+- If you see brown vegetation: "The grass hasn't been green since June."
+- If you see wet pavement: "The puddles will drain by noon. They always do now."
+- If you see shade structures: "The awnings went up in April. Nobody questioned the expense."
+
+## EXAMPLES OF WHAT NOT TO DO
+- DON'T: "A man with a briefcase..." (if no man is visible)
+- DON'T: "She sips her coffee..." (if no person is visible)
+- DON'T: "Workers take shelter..." (if no workers are visible)
 
 ## PROHIBITED WORDS
 Never use: apocalyptic, devastating, catastrophic, scorching, desperate, flee, collapse, disaster, doom, crisis, emergency
@@ -218,7 +228,7 @@ Never use: apocalyptic, devastating, catastrophic, scorching, desperate, flee, c
 ${locationContext}
 
 ## OUTPUT FORMAT
-Output ONLY the fiction text, nothing else. No "FICTION:" prefix, no explanations. Just 2-3 sentences.`;
+Output ONLY the fiction text, nothing else. No "FICTION:" prefix, no explanations. Just 2-3 sentences about what you ACTUALLY SEE.`;
 
   try {
     // Build messages with BOTH images
@@ -243,7 +253,7 @@ Output ONLY the fiction text, nothing else. No "FICTION:" prefix, no explanation
             data: generatedImage
           }
         },
-        { type: 'text', text: `Write a ${register} fiction dispatch (2-3 sentences) describing what you see in the GENERATED image. Match the visual - if the vegetation is brown, mention heat; if surfaces are wet, mention rain. Output only the fiction text.` }
+        { type: 'text', text: `Write a ${register} fiction dispatch (2-3 sentences) describing ONLY what is VISIBLE in the GENERATED image. DO NOT invent people or objects that are not shown. If no people are visible, write about the environment/architecture/weather instead. Output only the fiction text.` }
       ]
     }];
 
