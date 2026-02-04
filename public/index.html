@@ -983,9 +983,11 @@
     }
 
     async function shareResult() {
-      const btn = document.getElementById('share-copy');
-      btn.disabled = true;
-      btn.style.opacity = '0.5';
+      const btn = event.target.closest('.btn');
+      if (btn) {
+        btn.disabled = true;
+        btn.style.opacity = '0.5';
+      }
 
       const canvas = await generateShareCard();
 
@@ -1000,14 +1002,18 @@
         showToast('Could not generate share card');
       }
 
-      btn.disabled = false;
-      btn.style.opacity = '1';
+      if (btn) {
+        btn.disabled = false;
+        btn.style.opacity = '1';
+      }
     }
 
     async function copyShareCardToClipboard() {
-      const btn = document.getElementById('share-copy');
-      btn.disabled = true;
-      btn.style.opacity = '0.5';
+      const btn = event.target.closest('.btn');
+      if (btn) {
+        btn.disabled = true;
+        btn.style.opacity = '0.5';
+      }
 
       const canvas = await generateShareCard();
       if (canvas) {
@@ -1020,15 +1026,23 @@
           } catch(err) {
             // Fallback: download instead
             console.log('Clipboard failed, downloading instead:', err);
-            shareResult();
+            const link = document.createElement('a');
+            link.download = 'heated-' + (selectedScenario ? selectedScenario.id : 'fiction') + '-' + Date.now() + '.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+            showToast('Share card downloaded!');
           }
-          btn.disabled = false;
-          btn.style.opacity = '1';
+          if (btn) {
+            btn.disabled = false;
+            btn.style.opacity = '1';
+          }
         });
       } else {
         showToast('Could not generate share card');
-        btn.disabled = false;
-        btn.style.opacity = '1';
+        if (btn) {
+          btn.disabled = false;
+          btn.style.opacity = '1';
+        }
       }
     }
 
