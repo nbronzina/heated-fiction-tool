@@ -145,6 +145,14 @@ const scenarioDescriptions = {
   adaptation: 'successful climate adaptation - notice the lush green vegetation, comfortable atmosphere, people enjoying the space'
 };
 
+// Scenario contexts for fiction generation (implicit climate conditions)
+const scenarioContexts = {
+  heatwave: "summers regularly hit 44°C and public spaces have been redesigned for shade",
+  flood: "flash floods are routine and drainage infrastructure is part of daily planning",
+  windstorm: "severe windstorms are frequent and outdoor spaces are designed for it",
+  adaptation: "multiple climate stressors overlap and the city has quietly reorganized around them"
+};
+
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
@@ -185,20 +193,30 @@ export default async function handler(req, res) {
   // Build location context
   const locationContext = buildLocationContext(location);
 
-  // Build system prompt - Claude sees the generated image and writes fiction about it
-  const systemPrompt = `Look at this image carefully. Write a micro-fiction: 2-3 short sentences from someone IN this exact scene.
+  // Get scenario context for implicit climate connection
+  const scenarioContext = scenarioContexts[scenario] || "climate conditions have changed daily routines";
 
-Your fiction must reference elements actually visible in the image (the buildings, the people, the ground, the vegetation, etc.). Do not invent locations, people, or objects not visible.
+  // Build system prompt - Claude sees the generated image and writes fiction about it
+  const systemPrompt = `Look at this image. This is a scene from a near-future where ${scenarioContext}.
+
+Write a micro-fiction: 2-3 short sentences from someone IN this scene.
+
+The climate conditions should be IMPLICIT, not stated. Show them through:
+- New routines people have ("since they installed...", "ever since the...")
+- Casual comparisons ("four degrees cooler now", "used to be impossible at 3pm")
+- Small infrastructure changes that are now normal
 
 Rules:
-- Ordinary Tuesday tone — conditions are background, not story
-- Small logistics, passing thoughts
-- Present tense, no reflection
-- Reference visible elements, not imagined ones
+- Reference visible elements in the image
+- Ordinary Tuesday tone — this is normal life now
+- Present tense, mundane details
+- DO NOT say "climate change", "adaptation", "extreme weather"
+- DO NOT describe the image
+- DO NOT invent objects/people not visible
 
 ${locationContext}
 
-Output ONLY the fiction text, nothing else. No analysis, no description, no headers.
+Output ONLY the fiction text, nothing else.
 
 FICTION:`;
 
@@ -225,7 +243,7 @@ FICTION:`;
             data: generatedImage
           }
         },
-        { type: 'text', text: 'Write a micro-fiction (2-3 sentences) referencing visible elements. Output ONLY the fiction, nothing else.' }
+        { type: 'text', text: 'Write a micro-fiction (2-3 sentences). Show climate conditions IMPLICITLY through new routines or casual comparisons. Reference visible elements. Output ONLY the fiction.' }
       ]
     }];
 
