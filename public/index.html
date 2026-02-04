@@ -982,12 +982,45 @@
     // Share Card Generation
     async function generateShareCard() {
       const card = document.getElementById('share-card');
+      const cardImgBefore = document.getElementById('card-img-before');
+      const cardImgAfter = document.getElementById('card-img-after');
 
-      // Populate card
+      // Get source images
+      const srcBefore = document.getElementById('preview-img');
+      const srcAfter = document.getElementById('result-generated');
+
+      // Populate card content
       document.getElementById('card-scenario').textContent = selectedScenario ? selectedScenario.label.toUpperCase() : '';
-      document.getElementById('card-img-before').src = uploadedDataUrl || '';
-      document.getElementById('card-img-after').src = document.getElementById('result-generated').src || '';
+      cardImgBefore.src = uploadedDataUrl || '';
+      cardImgAfter.src = srcAfter.src || '';
       document.getElementById('card-fiction').textContent = document.getElementById('fiction-text')?.textContent || '';
+
+      // Calculate dimensions based on actual image sizes
+      const imgWidth = Math.max(srcBefore.naturalWidth || 800, srcAfter.naturalWidth || 800);
+      const imgHeight = Math.max(srcBefore.naturalHeight || 600, srcAfter.naturalHeight || 600);
+
+      // Cap dimensions to reasonable max (for performance)
+      const maxDim = 1200;
+      let finalWidth = imgWidth;
+      let finalHeight = imgHeight;
+      if (finalWidth > maxDim) {
+        finalHeight = Math.round((finalHeight * maxDim) / finalWidth);
+        finalWidth = maxDim;
+      }
+      if (finalHeight > maxDim) {
+        finalWidth = Math.round((finalWidth * maxDim) / finalHeight);
+        finalHeight = maxDim;
+      }
+
+      // Set card width: 2 images + padding (48) + gap (8)
+      const cardWidth = (finalWidth * 2) + 48 + 8;
+      card.style.width = cardWidth + 'px';
+
+      // Set image dimensions
+      cardImgBefore.style.width = finalWidth + 'px';
+      cardImgBefore.style.height = finalHeight + 'px';
+      cardImgAfter.style.width = finalWidth + 'px';
+      cardImgAfter.style.height = finalHeight + 'px';
 
       // Move to viewport temporarily for rendering
       card.style.left = '0';
@@ -998,7 +1031,7 @@
       try {
         const canvas = await html2canvas(card, {
           backgroundColor: '#1a1512',
-          scale: 1.5,
+          scale: 1,
           useCORS: true,
           allowTaint: true
         });
@@ -1100,19 +1133,19 @@
   </script>
 
   <!-- Hidden Share Card for html2canvas -->
-  <div id="share-card" style="position:absolute;left:-9999px;top:0;width:1800px;background:#1a1512;padding:32px;font-family:inherit">
+  <div id="share-card" style="position:absolute;left:-9999px;top:0;background:#1a1512;padding:32px;font-family:inherit">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">
       <span style="font-family:'DM Mono',monospace;font-size:14px;letter-spacing:6px;color:#fdcfa4">HEATED</span>
       <span id="card-scenario" style="font-family:'DM Mono',monospace;font-size:12px;letter-spacing:2px;color:#a09890;background:#2a2320;padding:6px 12px"></span>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:24px">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:24px">
       <div>
         <p style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;color:#6b6058;margin-bottom:8px">PRESENT</p>
-        <img id="card-img-before" style="width:100%;max-height:500px;object-fit:cover">
+        <img id="card-img-before" style="display:block;object-fit:contain">
       </div>
       <div>
         <p style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;color:#6b6058;margin-bottom:8px">FUTURE</p>
-        <img id="card-img-after" style="width:100%;max-height:500px;object-fit:cover">
+        <img id="card-img-after" style="display:block;object-fit:contain">
       </div>
     </div>
     <div style="border-left:2px solid #3d342f;padding-left:20px;margin-bottom:24px">
