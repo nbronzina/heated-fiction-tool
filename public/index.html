@@ -39,6 +39,10 @@
     .btn:hover { transform: translateY(-2px); }
     .btn:active { transform: translateY(0); }
     .btn:disabled { opacity: 0.25; cursor: not-allowed; transform: none !important; }
+    .btn:focus-visible { outline: 2px solid #fdcfa4; outline-offset: 2px; }
+    .share-btn-secondary:focus-visible { outline: 2px solid #fdcfa4; outline-offset: 2px; }
+    .sc-card:focus-visible { outline: 2px solid #fdcfa4; outline-offset: 2px; }
+    .upload-zone:focus-visible { outline: 2px solid #fdcfa4; outline-offset: 2px; }
     .btn-primary { padding: 18px 48px; background: #fdcfa4; color: #332b28; font-weight: 500; }
     .btn-ghost { padding: 16px 32px; background: none; border: 1px solid #4d4340; color: #7a706a; }
     .btn-ghost:hover { border-color: #fdcfa4; color: #fdcfa4; }
@@ -160,10 +164,30 @@
       }
 
       /* Step 0 footer columns stack */
-      #step-0 > div:last-child {
+      .step-0-footer {
         flex-direction: column;
         gap: 24px;
-        padding-top: 40px;
+        padding-top: 32px !important;
+      }
+
+      /* Nav padding reduced */
+      .nav {
+        padding: 12px 16px;
+      }
+
+      /* Upload zone height reduced */
+      .upload-zone {
+        min-height: 280px;
+      }
+
+      /* Generate button touch-friendly */
+      #generate-btn {
+        min-height: 52px;
+      }
+
+      /* Scenario cards reduced padding */
+      .sc-card {
+        padding: 24px 20px;
       }
 
       /* Action buttons stack vertically */
@@ -231,15 +255,15 @@
       Show us your design.<br>
       <span style="font-style:italic;color:#fdcfa4">We'll show you its future.</span>
     </h1>
-    <div style="max-width:640px;margin-bottom:40px">
+    <div style="max-width:640px;margin-bottom:48px">
       <p class="light" style="font-size:16px;line-height:1.8">Not a graph or a report — a tangible artefact from the near future. Upload your render, choose a climate scenario, and hold a piece of what comes next.</p>
     </div>
-    <button class="btn btn-primary" onclick="goStep(1)" style="align-self:flex-start">Begin</button>
-    <div style="margin-top:auto;padding-top:80px;display:flex;gap:48px;border-top:1px solid rgba(253,207,164,0.06)">
+    <div class="step-0-footer" style="margin-top:auto;padding-top:48px;display:flex;gap:48px;border-top:1px solid rgba(253,207,164,0.06)">
       <div style="flex:1"><p class="mono sand" style="font-size:10px;letter-spacing:2px;margin-bottom:8px">01</p><p class="muted" style="font-size:13px">Choose a climate scenario</p></div>
       <div style="flex:1"><p class="mono sand" style="font-size:10px;letter-spacing:2px;margin-bottom:8px">02</p><p class="muted" style="font-size:13px">Upload your design</p></div>
       <div style="flex:1"><p class="mono sand" style="font-size:10px;letter-spacing:2px;margin-bottom:8px">03</p><p class="muted" style="font-size:13px">See its future + read the fiction</p></div>
     </div>
+    <button class="btn btn-primary" onclick="goStep(1)" style="align-self:flex-start;margin-top:40px">Begin</button>
   </div>
 
   <div id="step-1" class="step" style="min-height:100vh;padding:120px 48px 80px;max-width:960px;margin:0 auto">
