@@ -1133,19 +1133,19 @@
   </script>
 
   <!-- Hidden Share Card for html2canvas -->
-  <div id="share-card" style="position:absolute;left:-9999px;top:0;background:#1a1512;padding:32px;font-family:inherit">
+  <div id="share-card" style="position:absolute;left:-9999px;top:0;background:#1a1512;padding:32px;font-family:inherit;display:inline-block">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">
       <span style="font-family:'DM Mono',monospace;font-size:14px;letter-spacing:6px;color:#fdcfa4">HEATED</span>
       <span id="card-scenario" style="font-family:'DM Mono',monospace;font-size:12px;letter-spacing:2px;color:#a09890;background:#2a2320;padding:6px 12px"></span>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:24px">
+    <div style="display:grid;grid-template-columns:auto auto;gap:8px;margin-bottom:24px">
       <div>
         <p style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;color:#6b6058;margin-bottom:8px">PRESENT</p>
-        <img id="card-img-before" style="display:block;object-fit:contain">
+        <img id="card-img-before" style="display:block;width:auto;height:auto;max-width:none">
       </div>
       <div>
         <p style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;color:#6b6058;margin-bottom:8px">FUTURE</p>
-        <img id="card-img-after" style="display:block;object-fit:contain">
+        <img id="card-img-after" style="display:block;width:auto;height:auto;max-width:none">
       </div>
     </div>
     <div style="border-left:2px solid #3d342f;padding-left:20px;margin-bottom:24px">
