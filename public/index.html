@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Heated — Artefacts from the Near Future</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet" />
@@ -16,6 +16,7 @@
       color: #fff5ea;
       min-height: 100vh;
       -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
     }
     .mono { font-family: 'DM Mono', monospace; }
     .serif { font-family: 'DM Serif Display', serif; }
@@ -44,8 +45,9 @@
     .sc-card:focus-visible { outline: 2px solid #fdcfa4; outline-offset: 2px; }
     .upload-zone:focus-visible { outline: 2px solid #fdcfa4; outline-offset: 2px; }
     .btn-primary { padding: 18px 48px; background: #fdcfa4; color: #332b28; font-weight: 500; }
-    .btn-ghost { padding: 16px 32px; background: none; border: 1px solid #4d4340; color: #7a706a; }
-    .btn-ghost:hover { border-color: #fdcfa4; color: #fdcfa4; }
+    .btn-ghost { padding: 16px 32px; background: none; border: 1px solid #4d4340; color: #7a706a; transition: all 0.2s ease; }
+    .btn-ghost:hover { border-color: #fdcfa4; color: #fdcfa4; background: rgba(253,207,164,0.05); }
+    .btn-primary:hover { background: #fff5ea; }
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     @keyframes slideUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
     @keyframes breathe { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
@@ -90,7 +92,9 @@
       transition: all 0.3s ease;
       overflow: hidden;
     }
+    .upload-zone:hover { border-color: rgba(253,207,164,0.15); background: rgba(253,207,164,0.02); }
     .upload-zone.has-image { min-height: auto; border-color: rgba(253,207,164,0.15); background: #2a2320; }
+    .upload-zone.has-image:hover { background: #302824; }
     .results-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; align-items: start; }
     .results-grid img { width: 100%; height: auto; object-fit: contain; display: block; max-height: 80vh; }
     .step { display: none; padding: 120px 48px 80px; }
@@ -148,13 +152,19 @@
       border-color: #E8572A;
       color: #E8572A;
     }
+    /* Safe area support for notched devices */
+    @supports (padding: max(0px)) {
+      .nav { padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); }
+      .step { padding-left: max(24px, env(safe-area-inset-left)); padding-right: max(24px, env(safe-area-inset-right)); }
+    }
+
     @media (max-width: 768px) {
       .results-grid { grid-template-columns: 1fr; }
       .results-grid img { max-height: 60vh; }
       .scenario-grid { grid-template-columns: 1fr !important; }
       .meta-bar { flex-direction: column; gap: 16px !important; }
-      .footer-bar { flex-direction: column; gap: 12px; text-align: center; }
-      .step { padding: 80px 24px 60px !important; }
+      .footer-bar { flex-direction: column; gap: 16px; text-align: center; align-items: center; }
+      .step { padding: 80px 20px 60px !important; }
       .btn-ghost, #nav-reset { padding: 12px 20px; min-height: 44px; }
 
       /* Share buttons touch target (44px minimum) */
@@ -173,6 +183,7 @@
       /* Nav padding reduced */
       .nav {
         padding: 12px 16px;
+        padding-top: max(12px, env(safe-area-inset-top));
       }
 
       /* Upload zone height reduced */
@@ -189,16 +200,28 @@
       .sc-card {
         padding: 24px 20px;
       }
+      .sc-card:hover {
+        transform: none; /* Disable hover scale on touch */
+      }
+      .sc-card:active {
+        transform: scale(0.98);
+        opacity: 0.9;
+      }
 
       /* Action buttons stack vertically */
       .action-buttons {
         flex-direction: column;
         padding: 24px 16px !important;
+        gap: 12px;
       }
       .action-buttons .btn,
       .action-buttons a.btn {
         flex: none !important;
         width: 100%;
+        min-height: 52px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
       }
 
       /* Consistent horizontal padding in step-4 */
@@ -207,7 +230,10 @@
         padding-right: 16px !important;
       }
 
-      /* Footer links wrap */
+      /* Footer bar mobile - hide address, simplify */
+      .footer-bar > span:nth-child(2) {
+        display: none;
+      }
       .footer-bar > div:last-child {
         flex-wrap: wrap;
         justify-content: center;
@@ -218,11 +244,26 @@
       .toast {
         max-width: calc(100vw - 32px);
         text-align: center;
+        bottom: max(1.5rem, env(safe-area-inset-bottom));
       }
 
       /* Small text readability */
       .mono.dim {
         font-size: 11px;
+      }
+
+      /* Fiction dispatch mobile */
+      .fiction-dispatch {
+        padding: 20px 20px;
+      }
+      .fiction-dispatch p {
+        font-size: 16px;
+        line-height: 1.65;
+      }
+      .fiction-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
       }
 
       /* Share section mobile optimization */
@@ -241,6 +282,48 @@
       .share-section p {
         margin: 8px 0;
       }
+
+      /* Progress dots larger for touch */
+      .progress-dots .dot {
+        width: 10px;
+        height: 10px;
+      }
+
+      /* Scenario badge wrap */
+      #scenario-badge {
+        flex-wrap: wrap;
+      }
+      #scenario-badge button {
+        margin-left: 0 !important;
+        margin-top: 8px;
+        min-height: 40px;
+      }
+
+      /* Loading step centered */
+      #step-3 > div {
+        padding: 0 20px;
+      }
+
+      /* Results labels smaller */
+      .results-grid > div > div[style*="position:absolute"] {
+        font-size: 9px !important;
+        padding: 5px 10px !important;
+      }
+
+      /* btn-primary full width */
+      .btn-primary {
+        width: 100%;
+        text-align: center;
+        padding: 18px 32px;
+      }
+    }
+
+    /* Tablet breakpoint */
+    @media (min-width: 769px) and (max-width: 1024px) {
+      .step { padding: 100px 32px 60px; }
+      .action-buttons { flex-wrap: wrap; }
+      .action-buttons .btn,
+      .action-buttons a.btn { flex: 1 1 45%; }
     }
   </style>
 </head>
