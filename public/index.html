@@ -201,10 +201,21 @@
         font-size: 11px;
       }
 
-      /* Share section button full width */
+      /* Share section mobile optimization */
+      .share-section {
+        padding: 24px 16px;
+        margin-top: 32px !important;
+      }
+
       .share-section .btn {
         width: 100%;
         justify-content: center;
+        padding: 18px 24px;
+        min-height: 52px;
+      }
+
+      .share-section p {
+        margin: 8px 0;
       }
     }
   </style>
@@ -983,28 +994,32 @@
     }
 
     async function shareResult() {
-      const btn = event.target.closest('.btn');
-      if (btn) {
-        btn.disabled = true;
-        btn.style.opacity = '0.5';
-      }
+      const btn = event.currentTarget || event.target.closest('.btn');
+      if (!btn) return;
 
-      const canvas = await generateShareCard();
+      const originalHTML = btn.innerHTML;
+      btn.innerHTML = '<span style="opacity:0.7">Generating...</span>';
+      btn.disabled = true;
 
-      if (canvas) {
-        const link = document.createElement('a');
-        link.download = 'heated-' + (selectedScenario ? selectedScenario.id : 'fiction') + '-' + Date.now() + '.png';
-        link.href = canvas.toDataURL('image/png');
-        link.click();
+      try {
+        const canvas = await generateShareCard();
 
-        showToast('Share card downloaded!');
-      } else {
+        if (canvas) {
+          const link = document.createElement('a');
+          link.download = 'heated-' + (selectedScenario ? selectedScenario.id : 'fiction') + '-' + Date.now() + '.png';
+          link.href = canvas.toDataURL('image/png');
+          link.click();
+
+          showToast('Share card downloaded!');
+        } else {
+          showToast('Could not generate share card');
+        }
+      } catch (err) {
+        console.error('Share failed:', err);
         showToast('Could not generate share card');
-      }
-
-      if (btn) {
+      } finally {
+        btn.innerHTML = originalHTML;
         btn.disabled = false;
-        btn.style.opacity = '1';
       }
     }
 
