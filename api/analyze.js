@@ -186,34 +186,36 @@ export default async function handler(req, res) {
   const locationContext = buildLocationContext(location);
 
   // Build system prompt - Claude sees the generated image and writes fiction about it
-  const systemPrompt = `Look at this generated image.
+  const systemPrompt = `Look at this image carefully.
 
-Write a micro-fiction: 2-3 short sentences. Something overheard, texted, or thought by someone in this scene.
+Write a micro-fiction: 2-3 short sentences from someone IN this exact scene.
 
-This is their ordinary Tuesday. The weather/conditions are background, not the story.
+FIRST, identify what's visible:
+- The specific place (street, plaza, building type)
+- People and what they're doing
+- Weather/ground conditions
+- Any signs, objects, or details
+
+THEN write about THIS scene, not a generic one. Your fiction must reference visible elements.
 
 Rules:
-- Small logistics, minor annoyances, passing thoughts
-- Specific mundane details: bus numbers, times, street names, small habits
-- Present tense, no reflection, no comparison to "before"
-- DO NOT describe what's visible in the image
-- DO NOT invent objects or people not visible
-- DO NOT mention climate, adaptation, or change
-- DO NOT use dramatic or literary language
+- Ordinary Tuesday tone — conditions are background, not story
+- Small logistics, passing thoughts
+- Present tense, no reflection
+- DO NOT invent locations, people, or objects not in the image
+- DO NOT mention trains if there's no train, kiosks if there's no kiosk, etc.
 
-Tone: how you'd text a friend about your commute. Ordinary. Specific. Forgettable.
+Bad example (invents things not visible):
+"Marta checks her phone: the 3:15 to Atocha leaves from platform 2"
+(There's no train station in this image)
 
-Examples of good tone:
-- "El 7 tarda más los jueves. Algo del drenaje. Ana ya lo tiene calculado."
-- "Desde las 12 hasta las 4, el lado norte. Después volvés al banco de siempre."
-
-Examples of bad tone (DO NOT write like this):
-- "The rising floodwaters forced residents to adapt their daily commutes..."
-- "Climate change has transformed this once-sunny plaza..."
+Good example (uses what's visible):
+"El adoquín del medio sigue suelto. Tres meses ya."
+(References the actual cobblestone street visible)
 
 ${locationContext}
 
-Output ONLY the fiction text. No prefix, no explanations.`;
+FICTION:`;
 
   try {
     // Build messages with BOTH images
@@ -238,7 +240,7 @@ Output ONLY the fiction text. No prefix, no explanations.`;
             data: generatedImage
           }
         },
-        { type: 'text', text: 'Write a micro-fiction (2-3 sentences). Something overheard, texted, or thought. Ordinary Tuesday. DO NOT describe the image. DO NOT invent objects/people not visible. Output only the fiction.' }
+        { type: 'text', text: 'First identify what you see in the GENERATED image. Then write a micro-fiction (2-3 sentences) that references visible elements. DO NOT invent locations/people/objects not shown. Output only the fiction.' }
       ]
     }];
 
