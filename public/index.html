@@ -6,6 +6,7 @@
   <title>Heated — Artefacts from the Near Future</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     ::selection { background: #fdcfa4; color: #332b28; }
@@ -953,6 +954,94 @@
       }
     }
 
+    // Share Card Generation
+    async function generateShareCard() {
+      const card = document.getElementById('share-card');
+
+      // Populate card
+      document.getElementById('card-scenario').textContent = selectedScenario ? selectedScenario.label.toUpperCase() : '';
+      document.getElementById('card-img-before').src = uploadedDataUrl || '';
+      document.getElementById('card-img-after').src = document.getElementById('result-generated').src || '';
+      document.getElementById('card-fiction').textContent = document.getElementById('fiction-text')?.textContent || '';
+
+      // Move to viewport temporarily for rendering
+      card.style.left = '0';
+      card.style.top = '0';
+      card.style.position = 'fixed';
+      card.style.zIndex = '-1';
+
+      try {
+        const canvas = await html2canvas(card, {
+          backgroundColor: '#1a1512',
+          scale: 2,
+          useCORS: true,
+          allowTaint: true
+        });
+
+        // Reset position
+        card.style.left = '-9999px';
+        card.style.position = 'absolute';
+        card.style.zIndex = 'auto';
+
+        return canvas;
+      } catch(err) {
+        card.style.left = '-9999px';
+        card.style.position = 'absolute';
+        console.error('Share card generation failed:', err);
+        return null;
+      }
+    }
+
+    async function shareResult() {
+      const btn = document.getElementById('share-copy');
+      btn.disabled = true;
+      btn.style.opacity = '0.5';
+
+      const canvas = await generateShareCard();
+
+      if (canvas) {
+        const link = document.createElement('a');
+        link.download = 'heated-' + (selectedScenario ? selectedScenario.id : 'fiction') + '-' + Date.now() + '.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+
+        showToast('Share card downloaded!');
+      } else {
+        showToast('Could not generate share card');
+      }
+
+      btn.disabled = false;
+      btn.style.opacity = '1';
+    }
+
+    async function copyShareCardToClipboard() {
+      const btn = document.getElementById('share-copy');
+      btn.disabled = true;
+      btn.style.opacity = '0.5';
+
+      const canvas = await generateShareCard();
+      if (canvas) {
+        canvas.toBlob(async (blob) => {
+          try {
+            await navigator.clipboard.write([
+              new ClipboardItem({ 'image/png': blob })
+            ]);
+            showToast('Copied to clipboard!');
+          } catch(err) {
+            // Fallback: download instead
+            console.log('Clipboard failed, downloading instead:', err);
+            shareResult();
+          }
+          btn.disabled = false;
+          btn.style.opacity = '1';
+        });
+      } else {
+        showToast('Could not generate share card');
+        btn.disabled = false;
+        btn.style.opacity = '1';
+      }
+    }
+
     // Share functionality
     document.getElementById('share-twitter').addEventListener('click', () => {
       const loc = locationData ? locationData.city : (selectedScenario ? selectedScenario.location : 'a building');
@@ -967,12 +1056,34 @@
       window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`, '_blank', 'width=550,height=420');
     });
 
-    document.getElementById('share-copy').addEventListener('click', () => {
-      navigator.clipboard.writeText('https://heated.studio').then(() => {
-        showToast('Link copied!');
-      });
-    });
+    // Share-copy button: try clipboard, fallback to download
+    document.getElementById('share-copy').addEventListener('click', copyShareCardToClipboard);
 
   </script>
+
+  <!-- Hidden Share Card for html2canvas -->
+  <div id="share-card" style="position:absolute;left:-9999px;top:0;width:1200px;background:#1a1512;padding:32px;font-family:inherit">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">
+      <span style="font-family:'DM Mono',monospace;font-size:14px;letter-spacing:6px;color:#fdcfa4">HEATED</span>
+      <span id="card-scenario" style="font-family:'DM Mono',monospace;font-size:12px;letter-spacing:2px;color:#a09890;background:#2a2320;padding:6px 12px"></span>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:24px">
+      <div>
+        <p style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;color:#6b6058;margin-bottom:8px">PRESENT</p>
+        <img id="card-img-before" style="width:100%;aspect-ratio:4/3;object-fit:cover">
+      </div>
+      <div>
+        <p style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;color:#6b6058;margin-bottom:8px">FUTURE</p>
+        <img id="card-img-after" style="width:100%;aspect-ratio:4/3;object-fit:cover">
+      </div>
+    </div>
+    <div style="border-left:2px solid #3d342f;padding-left:20px;margin-bottom:24px">
+      <p id="card-fiction" style="font-family:'DM Serif Display',serif;font-size:18px;line-height:1.6;color:#e8e0d8;font-style:italic"></p>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding-top:16px;border-top:1px solid #2a2320">
+      <span style="font-family:'DM Mono',monospace;font-size:11px;color:#6b6058">heated.studio</span>
+      <span style="font-family:'DM Mono',monospace;font-size:10px;color:#4d4340">Design fiction for climate futures</span>
+    </div>
+  </div>
 </body>
 </html>
