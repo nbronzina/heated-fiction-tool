@@ -186,49 +186,34 @@ export default async function handler(req, res) {
   const locationContext = buildLocationContext(location);
 
   // Build system prompt - Claude sees the generated image and writes fiction about it
-  const systemPrompt = `You are a climate fiction writer for Heated Studio. You write short "dispatches from the future" - 2-3 sentence observations that feel like texture of adapted life.
+  const systemPrompt = `Look at this generated image.
 
-## YOUR TASK
-You will see TWO images:
-1. ORIGINAL: The design as it was rendered today
-2. GENERATED: The same design transformed to show a ${scenarioDescriptions[scenario] || scenario}
+Write a micro-fiction: 2-3 short sentences. Something overheard, texted, or thought by someone in this scene.
 
-Write a 2-3 sentence fiction dispatch based ONLY on what you can SEE in the GENERATED image.
+This is their ordinary Tuesday. The weather/conditions are background, not the story.
 
-## CRITICAL: DO NOT INVENT
-- ONLY describe elements that are ACTUALLY VISIBLE in the generated image
-- Do NOT invent people, objects, or actions that are not shown
-- Do NOT assume there are people if none are visible
-- Do NOT mention briefcases, umbrellas, coffee cups, or other objects unless you can SEE them
-- If the image shows an empty space, write about the space itself, not imaginary people in it
+Rules:
+- Small logistics, minor annoyances, passing thoughts
+- Specific mundane details: bus numbers, times, street names, small habits
+- Present tense, no reflection, no comparison to "before"
+- DO NOT describe what's visible in the image
+- DO NOT invent objects or people not visible
+- DO NOT mention climate, adaptation, or change
+- DO NOT use dramatic or literary language
 
-## REGISTER
-Write in this register: ${register}
+Tone: how you'd text a friend about your commute. Ordinary. Specific. Forgettable.
 
-## RULES
-1. VISIBLE ELEMENTS ONLY: Describe ONLY what you can literally see - colors, surfaces, vegetation, sky, architecture
-2. NO INVENTED PEOPLE: If no people are visible, don't write about people. Write about the environment.
-3. MUNDANE, NOT APOCALYPTIC: "A Tuesday in August" not "the world is ending"
-4. 2-3 SENTENCES ONLY: Tight, observational
-5. ENGLISH ONLY: Always write in English
+Examples of good tone:
+- "El 7 tarda más los jueves. Algo del drenaje. Ana ya lo tiene calculado."
+- "Desde las 12 hasta las 4, el lado norte. Después volvés al banco de siempre."
 
-## EXAMPLES OF WHAT TO DO
-- If you see brown vegetation: "The grass hasn't been green since June."
-- If you see wet pavement: "The puddles will drain by noon. They always do now."
-- If you see shade structures: "The awnings went up in April. Nobody questioned the expense."
-
-## EXAMPLES OF WHAT NOT TO DO
-- DON'T: "A man with a briefcase..." (if no man is visible)
-- DON'T: "She sips her coffee..." (if no person is visible)
-- DON'T: "Workers take shelter..." (if no workers are visible)
-
-## PROHIBITED WORDS
-Never use: apocalyptic, devastating, catastrophic, scorching, desperate, flee, collapse, disaster, doom, crisis, emergency
+Examples of bad tone (DO NOT write like this):
+- "The rising floodwaters forced residents to adapt their daily commutes..."
+- "Climate change has transformed this once-sunny plaza..."
 
 ${locationContext}
 
-## OUTPUT FORMAT
-Output ONLY the fiction text, nothing else. No "FICTION:" prefix, no explanations. Just 2-3 sentences about what you ACTUALLY SEE.`;
+Output ONLY the fiction text. No prefix, no explanations.`;
 
   try {
     // Build messages with BOTH images
@@ -244,7 +229,7 @@ Output ONLY the fiction text, nothing else. No "FICTION:" prefix, no explanation
             data: originalImageData
           }
         },
-        { type: 'text', text: `GENERATED IMAGE (${scenario} scenario - write fiction about what you see here):` },
+        { type: 'text', text: 'GENERATED IMAGE:' },
         {
           type: 'image',
           source: {
@@ -253,7 +238,7 @@ Output ONLY the fiction text, nothing else. No "FICTION:" prefix, no explanation
             data: generatedImage
           }
         },
-        { type: 'text', text: `Write a ${register} fiction dispatch (2-3 sentences) describing ONLY what is VISIBLE in the GENERATED image. DO NOT invent people or objects that are not shown. If no people are visible, write about the environment/architecture/weather instead. Output only the fiction text.` }
+        { type: 'text', text: 'Write a micro-fiction (2-3 sentences). Something overheard, texted, or thought. Ordinary Tuesday. DO NOT describe the image. DO NOT invent objects/people not visible. Output only the fiction.' }
       ]
     }];
 
