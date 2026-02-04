@@ -1,10 +1,35 @@
 {
   "name": "heated-design-fiction",
   "version": "1.0.0",
+  "description": "Climate design fiction tool that transforms architectural renders into speculative visions of climate futures",
   "type": "module",
+  "main": "server.js",
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js"
+  },
+  "keywords": [
+    "climate",
+    "design-fiction",
+    "speculative-design",
+    "ai",
+    "gemini",
+    "claude",
+    "architecture",
+    "visualization"
+  ],
+  "author": "Heated Studio <hello@heated.studio>",
+  "license": "MIT",
+  "homepage": "https://heated.studio",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nbronzina/heated-fiction-tool"
+  },
+  "bugs": {
+    "url": "https://github.com/nbronzina/heated-fiction-tool/issues"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   },
   "dependencies": {
     "@google/genai": "^1.39.0",
