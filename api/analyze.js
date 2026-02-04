@@ -186,34 +186,19 @@ export default async function handler(req, res) {
   const locationContext = buildLocationContext(location);
 
   // Build system prompt - Claude sees the generated image and writes fiction about it
-  const systemPrompt = `Look at this image carefully.
+  const systemPrompt = `Look at this image carefully. Write a micro-fiction: 2-3 short sentences from someone IN this exact scene.
 
-Write a micro-fiction: 2-3 short sentences from someone IN this exact scene.
-
-FIRST, identify what's visible:
-- The specific place (street, plaza, building type)
-- People and what they're doing
-- Weather/ground conditions
-- Any signs, objects, or details
-
-THEN write about THIS scene, not a generic one. Your fiction must reference visible elements.
+Your fiction must reference elements actually visible in the image (the buildings, the people, the ground, the vegetation, etc.). Do not invent locations, people, or objects not visible.
 
 Rules:
 - Ordinary Tuesday tone — conditions are background, not story
 - Small logistics, passing thoughts
 - Present tense, no reflection
-- DO NOT invent locations, people, or objects not in the image
-- DO NOT mention trains if there's no train, kiosks if there's no kiosk, etc.
-
-Bad example (invents things not visible):
-"Marta checks her phone: the 3:15 to Atocha leaves from platform 2"
-(There's no train station in this image)
-
-Good example (uses what's visible):
-"El adoquín del medio sigue suelto. Tres meses ya."
-(References the actual cobblestone street visible)
+- Reference visible elements, not imagined ones
 
 ${locationContext}
+
+Output ONLY the fiction text, nothing else. No analysis, no description, no headers.
 
 FICTION:`;
 
@@ -240,7 +225,7 @@ FICTION:`;
             data: generatedImage
           }
         },
-        { type: 'text', text: 'First identify what you see in the GENERATED image. Then write a micro-fiction (2-3 sentences) that references visible elements. DO NOT invent locations/people/objects not shown. Output only the fiction.' }
+        { type: 'text', text: 'Write a micro-fiction (2-3 sentences) referencing visible elements. Output ONLY the fiction, nothing else.' }
       ]
     }];
 
@@ -270,11 +255,14 @@ FICTION:`;
 
     // Extract fiction from response
     if (data.content && data.content[0]?.text) {
-      const fiction = data.content[0].text.trim();
+      const rawText = data.content[0].text;
+      // Clean up: remove "FICTION:" prefix, markdown, and any analysis text
+      const fiction = rawText.replace(/.*FICTION:\s*/is, '').replace(/\*\*/g, '').trim();
 
       console.log('=== FICTION OUTPUT ===');
       console.log('Register used:', register);
-      console.log('Fiction:', fiction.substring(0, 200));
+      console.log('Raw:', rawText.substring(0, 100));
+      console.log('Clean:', fiction.substring(0, 200));
       console.log('======================');
 
       // Return in expected format for frontend
